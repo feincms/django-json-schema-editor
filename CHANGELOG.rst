@@ -7,6 +7,7 @@ Next version
 - Fixed the initialization of the JSON editor when we start with null values.
 - Changed the ID attributes of generated elements to hopefully be unique by
   using a unique ``form_name_root`` per editor instance.
+- Added optional support for self-describing JSON plugins using JSON pointers.
 
 
 0.7 (2025-09-05)

@@ -11,6 +11,12 @@ from django_json_schema_editor.fields import JSONField
 from django_json_schema_editor.forms import JSONEditorField
 
 
+try:
+    import jsonpointer
+except ImportError:
+    jsonpointer = None
+
+
 class _JSONPluginModelIterable(ModelIterable):
     def __iter__(self):
         mapping = self.queryset.model._proxy_types_map
@@ -36,6 +42,19 @@ class JSONPluginBase(models.Model):
         abstract = True
 
     def __str__(self):
+        pointer_value = None
+        schema = getattr(self, "SCHEMA", {})
+        if jsonpointer and schema and (pointer := schema.get("__str__")):
+            try:
+                pointer_value = jsonpointer.resolve_pointer(self.data, pointer)
+            except Exception:
+                pass
+
+        if pointer_value:
+            return pointer_value
+        if title := schema.get("title"):
+            return title
+
         type = self.type
         if cls := self._proxy_types_map.get(self.type):
             type = cls._meta.verbose_name

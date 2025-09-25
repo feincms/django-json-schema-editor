@@ -12,6 +12,19 @@ See [the blog post for the announcement and a screenshot](https://406.ch/writing
 - Foreign key references with Django admin lookups
 - Referential integrity for JSON data containing model references
 
+## JSON Schema Support
+
+The widget supports the [JSON Schema](https://json-schema.org/) standard for defining the structure and validation rules of your JSON data. Notable supported features include:
+
+- Basic types: string, number, integer, boolean, array, object
+- Format validations: date, time, email, etc.
+- Custom formats: prose (rich text), foreign_key (model references)
+- Required properties
+- Enums and default values
+- Nested objects and arrays
+
+The [documentation for the json-editor](https://www.npmjs.com/package/@json-editor/json-editor) offers a good overview over all supported features.
+
 ## Installation
 
 ```bash
@@ -22,6 +35,12 @@ For django-prose-editor support (rich text editing):
 
 ```bash
 pip install django-json-schema-editor[prose]
+```
+
+For JSON pointer support in feincms3 plugins:
+
+```bash
+pip install django-json-schema-editor[jsonpointer]
 ```
 
 ## Usage
@@ -192,18 +211,56 @@ The `name` field will be the name of the underlying `ManyToManyField` which actu
 
 Note that the `get_image_ids` getter has to be written in a very conservative way -- you cannot be sure that the model is valid otherwise. For example, you cannot assume that foreign key values are set (even when they are `null=False`). Django's validation hasn't cleared the model before the getter is invoked for the first time.
 
-## JSON Schema Support
+### feincms3 JSON Plugin Support
 
-The widget supports the [JSON Schema](https://json-schema.org/) standard for defining the structure and validation rules of your JSON data. Notable supported features include:
+Django JSON Schema Editor provides enhanced support for feincms3 JSON plugins with self-describing capabilities using JSON pointers. This allows for more intelligent display names and better integration with feincms3's plugin system.
 
-- Basic types: string, number, integer, boolean, array, object
-- Format validations: date, time, email, etc.
-- Custom formats: prose (rich text), foreign_key (model references)
-- Required properties
-- Enums and default values
-- Nested objects and arrays
+#### Self-Describing JSON Plugins
 
-The [documentation for the json-editor](https://www.npmjs.com/package/@json-editor/json-editor) offers a good overview over all supported features.
+When using the `jsonpointer` optional dependency, you can define schemas that describe how to extract display values from the JSON data:
+
+```python
+from django_json_schema_editor.plugins import JSONPluginBase
+
+class TextPlugin(JSONPluginBase):
+    SCHEMA = {
+        "type": "object",
+        "title": "Text Block",
+        "__str__": "/title",  # JSON pointer to extract display value
+        "properties": {
+            "title": {
+                "type": "string",
+                "title": "Title",
+            },
+            "content": {
+                "type": "string",
+                "format": "prose",
+                "title": "Content",
+            },
+        },
+        "required": ["title", "content"],
+    }
+```
+
+With this setup:
+
+1. **Display Names**: The `__str__` method will use the JSON pointer (`/title`) to extract a display value from the plugin's data
+2. **Fallback Behavior**: If the JSON pointer fails or the value is empty, it falls back to the schema's `title` field
+3. **Default Fallback**: If neither JSON pointer nor title are available, it falls back to the standard plugin type name
+
+#### Installation for feincms3 Support
+
+To use JSON pointer functionality, install the optional dependency:
+
+```bash
+pip install django-json-schema-editor[jsonpointer]
+```
+
+#### JSON Pointer Syntax
+
+The `__str__` field in your schema should contain a valid JSON pointer as defined by RFC 6901. For example, `/title` points to the `title` property at the root level of your JSON data.
+
+This feature makes feincms3 plugin instances much more readable in the admin interface and throughout your application.
 
 ## Development
 
