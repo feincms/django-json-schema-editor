@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 })
 
+let editorIndex = 0
+
 const initEditor = (el) => {
   if (el.dataset.foreignKey) {
     Object.assign(window.__djse_foreignKeys, JSON.parse(el.dataset.foreignKey))
@@ -31,6 +33,9 @@ const initEditor = (el) => {
   if (input.value && (value = JSON.parse(input.value))) {
     config.startval = value
   }
+
+  // Set an unique name so that form widgets get somewhat more unique names
+  config.form_name_root = `djse${++editorIndex}`
 
   const editor = new JSONEditor(el, config)
   editor.on("change", () => {

@@ -83,7 +83,7 @@ def test_json_editor_prose(page, live_server):
     expect(editor_container).to_be_visible()
 
     # Check for the text field using the exact ID from the HTML
-    text_input = page.locator('input[id="root[text]"]')
+    text_input = page.locator('input[id*="[text]"]')
     expect(text_input).to_be_visible()
     expect(text_input).to_have_value("Hello World")
 
@@ -118,7 +118,7 @@ def test_json_editor_edit_save(page, live_server):
     page.wait_for_timeout(1000)  # Wait for editor to initialize
 
     # Edit the regular text field
-    text_input = page.locator('input[id="root[text]"]')
+    text_input = page.locator('input[id*="[text]"]')
     expect(text_input).to_be_visible()
     text_input.fill("Updated text")
 
@@ -140,7 +140,7 @@ def test_json_editor_edit_save(page, live_server):
     page.wait_for_timeout(1000)
 
     # Verify text field was updated
-    text_input = page.locator('input[id="root[text]"]')
+    text_input = page.locator('input[id*="[text]"]')
     expect(text_input).to_have_value("Updated text")
 
     # Verify prose field was updated
@@ -173,7 +173,7 @@ def test_json_editor_display(page, live_server):
     page.wait_for_timeout(1000)
 
     # Verify that text field displays our test data
-    text_input = page.locator('input[id="root[text]"]')
+    text_input = page.locator('input[id*="[text]"]')
     expect(text_input).to_be_visible()
     expect(text_input).to_have_value("Test text field")
 
@@ -205,7 +205,7 @@ def test_json_editor_ui_elements(page, live_server):
     expect(page.locator(".prose-menubar__button[title='underline']")).to_be_visible()
 
     # Verify the text editor field is present
-    text_input = page.locator('input[id="root[text]"]')
+    text_input = page.locator('input[id*="[text]"]')
     expect(text_input).to_be_visible()
 
     # Focus on the prose editor
