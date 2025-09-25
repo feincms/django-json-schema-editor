@@ -4,6 +4,8 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+- Be more careful in ``JSONPluginBase.__str__`` to actually return strings.
+
 
 0.8 (2025-09-25)
 ~~~~~~~~~~~~~~~~

@@ -51,9 +51,9 @@ class JSONPluginBase(models.Model):
                 pass
 
         if pointer_value:
-            return pointer_value
+            return str(pointer_value)
         if title := schema.get("title"):
-            return title
+            return str(title)
 
         type = self.type
         if cls := self._proxy_types_map.get(self.type):

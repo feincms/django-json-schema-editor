@@ -5,6 +5,7 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.utils.translation import gettext_lazy as _
 
 
 content_editor_mock = MagicMock()
@@ -37,7 +38,7 @@ class _TestPluginWithoutPointer(JSONPluginBase):
 
     SCHEMA = {
         "type": "object",
-        "title": "Simple Plugin",
+        "title": _("Simple Plugin"),
         "properties": {
             "content": {"type": "string"},
         },
