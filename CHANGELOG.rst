@@ -4,6 +4,10 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+
+0.8 (2025-09-25)
+~~~~~~~~~~~~~~~~
+
 - Fixed the initialization of the JSON editor when we start with null values.
 - Changed the ID attributes of generated elements to hopefully be unique by
   using a unique ``form_name_root`` per editor instance.
