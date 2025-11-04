@@ -24,6 +24,7 @@ function createJSONProseEditor(textarea, options, setClobber) {
   }
 
   createEditor(textarea, {
+    ...options,
     extensions: { ...core, ...extensions },
   }).then((editor) => {
     setClobber(() => {

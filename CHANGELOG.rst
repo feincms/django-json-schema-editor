@@ -5,6 +5,8 @@ Next version
 ~~~~~~~~~~~~
 
 - Be more careful in ``JSONPluginBase.__str__`` to actually return strings.
+- Allowed forwarding more config options to the configurable prose editor, not
+  just extensions.
 
 
 0.8 (2025-09-25)
