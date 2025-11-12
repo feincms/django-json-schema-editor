@@ -1,5 +1,6 @@
 from functools import partial
 
+import jmespath
 from content_editor.admin import ContentEditorInline
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -71,7 +72,7 @@ class JSONPluginBase(models.Model):
         return super().get_queryset().downcast()
 
     @classmethod
-    def proxy(cls, type_name, *, schema, **meta):
+    def proxy(cls, type_name, *, schema, foreign_key_paths=None, **meta):
         meta["proxy"] = True
         meta["app_label"] = cls._meta.app_label
         meta.setdefault("verbose_name", type_name)
@@ -80,6 +81,7 @@ class JSONPluginBase(models.Model):
 
         if not hasattr(cls, "_proxy_types_map"):
             cls._proxy_types_map = {}
+            cls._proxy_types_foreign_key_paths = {}
 
         if type_name in cls._proxy_types_map:
             raise ImproperlyConfigured(
@@ -97,7 +99,35 @@ class JSONPluginBase(models.Model):
             },
         )
         cls._proxy_types_map[type_name] = new_type
+        cls._proxy_types_foreign_key_paths[type_name] = foreign_key_paths or {}
         return new_type
+
+    @classmethod
+    def register_foreign_key(cls, model, *, name):
+        def _getter(plugin):
+            if (
+                foreign_key_paths := cls._proxy_types_foreign_key_paths.get(plugin.type)
+            ) and (paths := foreign_key_paths.get(model._meta.label_lower)):
+                return [
+                    plugin._meta.pk.to_python(value)
+                    for value in flatten(
+                        [jmespath.search(path, plugin.data) for path in paths]
+                    )
+                    if value
+                ]
+            return []
+
+        cls.register_data_reference(model, name=name, getter=_getter)
+
+
+def flatten(lst):
+    result = []
+    for item in lst:
+        if isinstance(item, list):
+            result.extend(flatten(item))
+        else:
+            result.append(item)
+    return result
 
 
 class JSONPluginInline(ContentEditorInline):
@@ -106,9 +136,24 @@ class JSONPluginInline(ContentEditorInline):
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "data":
+            foreign_key_descriptions = getattr(self, "foreign_key_descriptions", [])
+            if not foreign_key_descriptions and (
+                foreign_key_paths := self.model._proxy_types_foreign_key_paths.get(
+                    self.model.TYPE
+                )
+            ):
+                foreign_key_descriptions = [
+                    (
+                        model,
+                        lambda data, paths=paths: flatten(
+                            [jmespath.search(path, data) for path in paths]
+                        ),
+                    )
+                    for model, paths in foreign_key_paths.items()
+                ]
             kwargs["form_class"] = partial(
                 JSONEditorField,
                 schema=self.model.SCHEMA,
-                foreign_key_descriptions=getattr(self, "foreign_key_descriptions", []),
+                foreign_key_descriptions=foreign_key_descriptions,
             )
         return super().formfield_for_dbfield(db_field, request, **kwargs)
