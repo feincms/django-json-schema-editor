@@ -37,12 +37,6 @@ For django-prose-editor support (rich text editing):
 pip install django-json-schema-editor[prose]
 ```
 
-For JSON pointer support in feincms3 plugins:
-
-```bash
-pip install django-json-schema-editor[jsonpointer]
-```
-
 ## Usage
 
 ### Basic Setup
@@ -160,10 +154,58 @@ class MyModel(models.Model):
     )
 ```
 
+#### Displaying Foreign Key Labels
+
+By default, foreign key fields only store the primary key value. To display human-readable labels in the admin interface, use the `foreign_key_descriptions` parameter:
+
+```python
+class Article(models.Model):
+    data = JSONField(
+        schema={
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "featured_image": {
+                    "type": "string",
+                    "format": "foreign_key",
+                    "options": {
+                        "url": "/admin/myapp/image/?_popup=1&_to_field=id",
+                    },
+                },
+                "gallery": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "foreign_key",
+                        "options": {
+                            "url": "/admin/myapp/image/?_popup=1&_to_field=id",
+                        },
+                    },
+                },
+            },
+            "required": ["title"],
+        },
+        foreign_key_descriptions=[
+            ("myapp.image", lambda data: [
+                pk for pk in [data.get("featured_image")] + data.get("gallery", []) if pk
+            ]),
+        ],
+    )
+```
+
+The `foreign_key_descriptions` parameter accepts a list of tuples, where each tuple contains:
+1. **Model label** (string): The model's app label and model name in the format `"app_label.model_name"`
+2. **Getter function**: A callable that takes the JSON data and returns a **list** of primary keys to resolve
+
+**Important**: The getter function must always return a list of primary keys (even for single foreign key values), which will be resolved to display strings in the admin interface.
+
 ### Data References and Referential Integrity
 
-One of the most powerful features is the ability to maintain referential
-integrity between JSON data and model instances:
+One of the most powerful features is the ability to maintain referential integrity between JSON data and model instances. This prevents referenced objects from being deleted while they're still in use.
+
+#### Basic Usage with JSONField
+
+For regular Django models using `JSONField`, you can manually register data references:
 
 ```python
 from django.db import models
@@ -209,15 +251,19 @@ This prevents a referenced image from being deleted as long as it's referenced i
 
 The `name` field will be the name of the underlying `ManyToManyField` which actually references the `Image` instances.
 
-Note that the `get_image_ids` getter has to be written in a very conservative way -- you cannot be sure that the model is valid otherwise. For example, you cannot assume that foreign key values are set (even when they are `null=False`). Django's validation hasn't cleared the model before the getter is invoked for the first time.
+**Important**: The `get_image_ids` getter must be written defensively -- you cannot assume the model is valid. For example, you cannot assume that foreign key values are set (even when they are `null=False`). Django's validation hasn't cleared the model before the getter is invoked for the first time.
+
+#### Streamlined Approach with foreign_key_paths
+
+For JSON plugins (see the feincms3 section below), the `foreign_key_paths` parameter provides a more declarative way to achieve the same result without writing manual getter functions. Instead of extracting values with custom Python code, you specify JMESPath expressions that locate foreign keys in your JSON structure.
 
 ### feincms3 JSON Plugin Support
 
-Django JSON Schema Editor provides enhanced support for feincms3 JSON plugins with self-describing capabilities using JSON pointers. This allows for more intelligent display names and better integration with feincms3's plugin system.
+Django JSON Schema Editor provides enhanced support for feincms3 JSON plugins with self-describing capabilities using jmespath values. This allows for more intelligent display names and better integration with feincms3's plugin system.
 
 #### Self-Describing JSON Plugins
 
-When using the `jsonpointer` optional dependency, you can define schemas that describe how to extract display values from the JSON data:
+When using the `jmespath` dependency, you can define schemas that describe how to extract display values from the JSON data:
 
 ```python
 from django_json_schema_editor.plugins import JSONPluginBase
@@ -226,7 +272,7 @@ class TextPlugin(JSONPluginBase):
     SCHEMA = {
         "type": "object",
         "title": "Text Block",
-        "__str__": "/title",  # JSON pointer to extract display value
+        "__str__": "title",  # jmespath to extract display value
         "properties": {
             "title": {
                 "type": "string",
@@ -244,23 +290,94 @@ class TextPlugin(JSONPluginBase):
 
 With this setup:
 
-1. **Display Names**: The `__str__` method will use the JSON pointer (`/title`) to extract a display value from the plugin's data
-2. **Fallback Behavior**: If the JSON pointer fails or the value is empty, it falls back to the schema's `title` field
-3. **Default Fallback**: If neither JSON pointer nor title are available, it falls back to the standard plugin type name
-
-#### Installation for feincms3 Support
-
-To use JSON pointer functionality, install the optional dependency:
-
-```bash
-pip install django-json-schema-editor[jsonpointer]
-```
-
-#### JSON Pointer Syntax
-
-The `__str__` field in your schema should contain a valid JSON pointer as defined by RFC 6901. For example, `/title` points to the `title` property at the root level of your JSON data.
+1. **Display Names**: The `__str__` method will use the jmespath (`title`) to extract a display value from the plugin's data
+2. **Fallback Behavior**: If the jmespath fails or the value is empty, it falls back to the schema's `title` field
+3. **Default Fallback**: As a last resort, it falls back to the standard plugin type name
 
 This feature makes feincms3 plugin instances much more readable in the admin interface and throughout your application.
+
+#### Foreign Key References in JSON Plugins
+
+When your JSON plugins contain foreign key references, you can use `foreign_key_paths` to streamline the configuration:
+
+```python
+from django_json_schema_editor.plugins import JSONPluginBase
+
+class VocabularyPlugin(JSONPluginBase):
+    SCHEMA = {
+        "type": "object",
+        "title": "Vocabulary Table",
+        "__str__": "title",
+        "properties": {
+            "title": {"type": "string"},
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "word": {"type": "string"},
+                        "audiofile": {
+                            "type": "string",
+                            "format": "foreign_key",
+                            "options": {
+                                "url": "/admin/files/file/?_popup=1&_to_field=id",
+                                "model": "files.file",
+                            },
+                        },
+                        "example": {"type": "string"},
+                        "example_audiofile": {
+                            "type": "string",
+                            "format": "foreign_key",
+                            "options": {
+                                "url": "/admin/files/file/?_popup=1&_to_field=id",
+                                "model": "files.file",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+# Create the proxy plugin with foreign_key_paths
+VocabularyTablePlugin = JSONPluginBase.proxy(
+    "vocabulary_table",
+    verbose_name="Vocabulary Table",
+    schema=SCHEMA,
+    foreign_key_paths={
+        "files.file": ["items[*].audiofile", "items[*].example_audiofile"],
+    },
+)
+```
+
+The `foreign_key_paths` parameter:
+- **Key**: Model label in the format `"app_label.model_name"`
+- **Value**: List of JMESPath expressions that locate foreign key values in the JSON data
+- Supports complex paths including array wildcards (`[*]`) for nested structures
+
+This provides two main benefits:
+
+1. **Referential Integrity**: When combined with `register_foreign_key()`, it automatically prevents referenced models from being deleted while they're in use
+2. **Admin Display**: In the admin interface (via `JSONPluginInline`), foreign key values are automatically resolved to display human-readable labels
+
+##### Setting Up Referential Integrity
+
+After defining your plugin proxy classes, register them to maintain referential integrity:
+
+```python
+# Register foreign key relationships for all plugins
+ChapterStructuredData.register_foreign_key(
+    File,  # The model being referenced
+    name="referenced_files",  # Name for the M2M relationship
+)
+```
+
+This will automatically:
+- Extract foreign key values from your JSON data using the `foreign_key_paths` defined in each plugin
+- Create many-to-many relationships to track these references
+- Prevent deletion of referenced models when they're in use
+
+The `foreign_key_paths` approach is more maintainable than manually writing getter functions, especially when dealing with nested arrays or multiple foreign key fields in your JSON schema.
 
 ## Development
 

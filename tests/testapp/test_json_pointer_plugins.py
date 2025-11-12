@@ -1,4 +1,4 @@
-"""Tests for JSON pointer support in JSONPluginBase."""
+"""Tests for JSON path support in JSONPluginBase."""
 
 # Mock content_editor to avoid dependency issues
 import sys
@@ -17,12 +17,12 @@ from django_json_schema_editor.plugins import JSONPluginBase  # noqa: E402
 
 
 class _TestPlugin(JSONPluginBase):
-    """Test plugin class for JSON pointer testing."""
+    """Test plugin class for JSON path testing."""
 
     SCHEMA = {
         "type": "object",
         "title": "Test Plugin",
-        "__str__": "/title",
+        "__str__": "title",
         "properties": {
             "title": {"type": "string"},
             "content": {"type": "string"},
@@ -34,7 +34,7 @@ class _TestPlugin(JSONPluginBase):
 
 
 class _TestPluginWithoutPointer(JSONPluginBase):
-    """Test plugin without JSON pointer but with title."""
+    """Test plugin without JSON path but with title."""
 
     SCHEMA = {
         "type": "object",
@@ -59,10 +59,10 @@ class _TestPluginMinimal(JSONPluginBase):
 
 @pytest.mark.django_db
 class TestJSONPointerSupport:
-    """Test JSON pointer functionality in JSONPluginBase.__str__."""
+    """Test JSON path functionality in JSONPluginBase.__str__."""
 
-    def test_str_with_json_pointer_success(self):
-        """Test __str__ method with successful JSON pointer resolution."""
+    def test_str_with_json_path_success(self):
+        """Test __str__ method with successful JSON path resolution."""
         plugin = _TestPlugin()
         plugin.data = {"title": "My Title", "content": "Some content"}
 
@@ -70,54 +70,54 @@ class TestJSONPointerSupport:
 
         assert result == "My Title"
 
-    def test_str_with_json_pointer_exception(self):
-        """Test __str__ method when JSON pointer resolution fails."""
+    def test_str_with_json_path_exception(self):
+        """Test __str__ method when JSON path resolution fails."""
         plugin = _TestPlugin()
         plugin.data = {"content": "Some content"}  # missing "title"
         plugin.type = "test_plugin"
 
         result = str(plugin)
 
-        # Should fall back to schema title since JSON pointer fails
+        # Should fall back to schema title since JSON path fails
         assert result == "Test Plugin"
 
-    def test_str_without_jsonpointer_module(self):
-        """Test __str__ method when jsonpointer module is not available."""
-        with patch("django_json_schema_editor.plugins.jsonpointer", None):
+    def test_str_without_jmespath_module(self):
+        """Test __str__ method when jmespath module is not available."""
+        with patch("django_json_schema_editor.plugins.jmespath", None):
             plugin = _TestPlugin()
             plugin.data = {"title": "My Title"}
             plugin.type = "test_plugin"
 
             result = str(plugin)
 
-            # Should fall back to schema title since jsonpointer is None
+            # Should fall back to schema title since jsonpath is None
             assert result == "Test Plugin"
 
-    def test_str_with_empty_pointer_result(self):
-        """Test __str__ method when JSON pointer returns empty string."""
+    def test_str_with_empty_path_result(self):
+        """Test __str__ method when JSON path returns empty string."""
         plugin = _TestPlugin()
         plugin.data = {"title": "", "content": "Some content"}
         plugin.type = "test_plugin"
 
         result = str(plugin)
 
-        # Should fall back to schema title when pointer result is empty
+        # Should fall back to schema title when path result is empty
         assert result == "Test Plugin"
 
-    def test_str_with_none_pointer_result(self):
-        """Test __str__ method when JSON pointer returns None."""
+    def test_str_with_none_path_result(self):
+        """Test __str__ method when JSON path returns None."""
         plugin = _TestPlugin()
         plugin.data = {"title": None, "content": "Some content"}
         plugin.type = "test_plugin"
 
         result = str(plugin)
 
-        # Should fall back to schema title when pointer result is None
+        # Should fall back to schema title when path result is None
         assert result == "Test Plugin"
 
     def test_str_fallback_to_schema_title(self):
         """Test __str__ method fallback to schema title."""
-        with patch("django_json_schema_editor.plugins.jsonpointer", None):
+        with patch("django_json_schema_editor.plugins.jmespath", None):
             plugin = _TestPluginWithoutPointer()
             plugin.data = {"content": "Some content"}
             plugin.type = "simple_plugin"
@@ -128,7 +128,7 @@ class TestJSONPointerSupport:
 
     def test_str_minimal_schema_fallback(self):
         """Test __str__ method with minimal schema falls back to type."""
-        with patch("django_json_schema_editor.plugins.jsonpointer", None):
+        with patch("django_json_schema_editor.plugins.jmespath", None):
             plugin = _TestPluginMinimal()
             plugin.data = {"content": "Some content"}
             plugin.type = "minimal_plugin"
@@ -168,14 +168,14 @@ class TestJSONPointerSupport:
 
         assert result == 'Mock Proxy Type on Parent Object "Parent Instance"'
 
-    def test_str_with_valid_pointer_value_overrides_title(self):
-        """Test that valid JSON pointer value takes precedence over schema title."""
+    def test_str_with_valid_path_value_overrides_title(self):
+        """Test that valid JSON path value takes precedence over schema title."""
         plugin = _TestPlugin()
         plugin.data = {"title": "Pointer Value"}
 
         result = str(plugin)
 
-        # Should use pointer value, not schema title
+        # Should use path value, not schema title
         assert result == "Pointer Value"
         assert result != "Test Plugin"  # Should not fall back to schema title
 

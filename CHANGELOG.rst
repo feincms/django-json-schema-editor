@@ -4,6 +4,12 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+- **Backwards incompatible** The JSON pointer usage has been replaced by
+  jmespath usage. ``__str__`` values in schemas for the ``JSONPluginBase``
+  should be updated for the new syntax (for example, ``object.title`` instead
+  of ``/object/title``), otherwise the code acts as if they weren't there.
+  Failures are silent because crashes aren't worth it. Removed the
+  ``jsonpointer`` extra and instead added a hard dependency on ``jmespath``.
 - Be more careful in ``JSONPluginBase.__str__`` to actually return strings.
 - Allowed forwarding more config options to the configurable prose editor, not
   just extensions.

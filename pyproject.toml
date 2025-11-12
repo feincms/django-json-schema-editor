@@ -33,9 +33,6 @@ dependencies = [
   "fastjsonschema>=2.19",
   "jmespath",
 ]
-optional-dependencies.jsonpointer = [
-  "jsonpointer",
-]
 optional-dependencies.prose = [
   "django-prose-editor>=0.11b3",
 ]
