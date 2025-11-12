@@ -31,6 +31,7 @@ dynamic = [
 dependencies = [
   "django-js-asset>=3",
   "fastjsonschema>=2.19",
+  "jmespath",
 ]
 optional-dependencies.jsonpointer = [
   "jsonpointer",
