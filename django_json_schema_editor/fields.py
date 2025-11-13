@@ -145,7 +145,7 @@ def flatten(lst):
     return result
 
 
-def paths_to_pks(*, to, paths, data):
+def paths_to_pks(data, *, to, paths):
     """
     Converts a list of JMES paths to a list of primary key values
 
