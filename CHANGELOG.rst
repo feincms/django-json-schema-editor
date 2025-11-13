@@ -4,15 +4,25 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
-- **Backwards incompatible** The JSON pointer usage has been replaced by
-  jmespath usage. ``__str__`` values in schemas for the ``JSONPluginBase``
-  should be updated for the new syntax (for example, ``object.title`` instead
-  of ``/object/title``), otherwise the code acts as if they weren't there.
-  Failures are silent because crashes aren't worth it. Removed the
-  ``jsonpointer`` extra and instead added a hard dependency on ``jmespath``.
+0.9 (2025-11-13)
+~~~~~~~~~~~~~~~~
+
+- **Backwards incompatible change to ``JSONPluginBase``** The JSON pointer
+  usage has been replaced by jmespath usage. ``__str__`` values in schemas for
+  the ``JSONPluginBase`` should be updated for the new syntax (for example,
+  ``object.title`` instead of ``/object/title``), otherwise the code acts as if
+  they weren't there. Failures are silent because crashes aren't worth it.
+  Removed the ``jsonpointer`` extra and instead added a hard dependency on
+  ``jmespath``.
 - Be more careful in ``JSONPluginBase.__str__`` to actually return strings.
 - Allowed forwarding more config options to the configurable prose editor, not
   just extensions.
+- Added a more streamlined way to use foreign key references when using the
+  ``JSONPluginBase``, see ``foreign_key_paths`` and
+  ``register_foreign_key_reference`` in the documentation. The new
+  functionality allows preventing deletion of referenced objects and showing a
+  description of the referenced object (like Django's own ``raw_id_fields``)
+  with less steps.
 
 
 0.8 (2025-09-25)
