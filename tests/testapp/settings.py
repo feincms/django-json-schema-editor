@@ -13,6 +13,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django_json_schema_editor",
     "django_prose_editor",
+    "content_editor",
     "testapp",
 ]
 

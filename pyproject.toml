@@ -39,6 +39,7 @@ optional-dependencies.prose = [
 optional-dependencies.tests = [
   "asgiref",
   "coverage",
+  "django-content-editor",
   "pytest",
   "pytest-asyncio",
   "pytest-cov",

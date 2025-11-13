@@ -1,6 +1,8 @@
+from content_editor.admin import ContentEditor
 from django.contrib import admin
 
 from django_json_schema_editor.fields import paths_to_pks
+from django_json_schema_editor.plugins import JSONPluginInline
 from testapp import models
 
 
@@ -24,3 +26,11 @@ class ThingAdmin(admin.ModelAdmin):
                 ),
             ]
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+@admin.register(models.Article)
+class ArticleAdmin(ContentEditor):
+    inlines = [
+        JSONPluginInline.create(models.Text),
+        JSONPluginInline.create(models.Download),
+    ]

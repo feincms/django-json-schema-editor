@@ -1,19 +1,14 @@
 """Tests for JSON path support in JSONPluginBase."""
 
-# Mock content_editor to avoid dependency issues
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.utils.translation import gettext_lazy as _
+from playwright.sync_api import expect
 
-
-content_editor_mock = MagicMock()
-content_editor_mock.admin.ContentEditorInline = MagicMock()
-sys.modules["content_editor"] = content_editor_mock
-sys.modules["content_editor.admin"] = content_editor_mock.admin
-
-from django_json_schema_editor.plugins import JSONPluginBase  # noqa: E402
+from django_json_schema_editor.plugins import JSONPluginBase
+from testapp import models
+from testapp.test_json_editor import login_admin
 
 
 class _TestPlugin(JSONPluginBase):
@@ -33,7 +28,7 @@ class _TestPlugin(JSONPluginBase):
         app_label = "testapp"
 
 
-class _TestPluginWithoutPointer(JSONPluginBase):
+class _TestPluginWithoutPath(JSONPluginBase):
     """Test plugin without JSON path but with title."""
 
     SCHEMA = {
@@ -58,7 +53,7 @@ class _TestPluginMinimal(JSONPluginBase):
 
 
 @pytest.mark.django_db
-class TestJSONPointerSupport:
+class TestJSONPathSupport:
     """Test JSON path functionality in JSONPluginBase.__str__."""
 
     def test_str_with_json_path_success(self):
@@ -118,7 +113,7 @@ class TestJSONPointerSupport:
     def test_str_fallback_to_schema_title(self):
         """Test __str__ method fallback to schema title."""
         with patch("django_json_schema_editor.plugins.jmespath", None):
-            plugin = _TestPluginWithoutPointer()
+            plugin = _TestPluginWithoutPath()
             plugin.data = {"content": "Some content"}
             plugin.type = "simple_plugin"
 
@@ -171,12 +166,12 @@ class TestJSONPointerSupport:
     def test_str_with_valid_path_value_overrides_title(self):
         """Test that valid JSON path value takes precedence over schema title."""
         plugin = _TestPlugin()
-        plugin.data = {"title": "Pointer Value"}
+        plugin.data = {"title": "Path Value"}
 
         result = str(plugin)
 
         # Should use path value, not schema title
-        assert result == "Pointer Value"
+        assert result == "Path Value"
         assert result != "Test Plugin"  # Should not fall back to schema title
 
     def test_str_no_schema_attribute(self):
@@ -201,3 +196,50 @@ class TestJSONPointerSupport:
 
         # Should fall back to type name with parent info
         assert result == 'No_schema_plugin on Parent Object "Parent Instance"'
+
+
+@pytest.mark.django_db
+def test_json_plugin_models():
+    article = models.Article.objects.create()
+    models.Text.objects.create(
+        parent=article, region="main", ordering=10, data={"text": "Hello World"}
+    )
+    models.Download.objects.create(
+        parent=article,
+        region="main",
+        ordering=20,
+        data={"file": models.File.objects.create(name="test.png").pk},
+    )
+
+    plugins = list(models.JSONPlugin.get_queryset())
+
+    assert isinstance(plugins[0], models.Text)
+    assert isinstance(plugins[1], models.Download)
+
+
+@pytest.mark.django_db
+@pytest.mark.e2e
+def test_json_plugin_admin(page, live_server):
+    """Test that the JSON editor is loaded in the admin form."""
+    login_admin(page, live_server)
+
+    article = models.Article.objects.create()
+    models.Text.objects.create(
+        parent=article, region="main", ordering=10, data={"text": "Hello World"}
+    )
+    models.Download.objects.create(
+        parent=article,
+        region="main",
+        ordering=20,
+        data={"file": models.File.objects.create(name="test.png").pk},
+    )
+
+    page.goto(f"{live_server.url}/admin/testapp/article/{article.pk}/change/")
+
+    # Check that the editor is loaded
+    # editor_container = page.locator(".django_json_schema_editor")
+    # Fails because locator doesn't like matching multiple elements
+    # expect(editor_container).to_be_visible()
+
+    raw_id_field_label = page.locator(".django_json_schema_editor .form-control strong")
+    expect(raw_id_field_label).to_contain_text("test.png")
