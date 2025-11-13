@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from django_json_schema_editor.fields import paths_to_pks
 from testapp import models
 
 
@@ -10,4 +11,16 @@ class FileAdmin(admin.ModelAdmin):
 
 @admin.register(models.Thing)
 class ThingAdmin(admin.ModelAdmin):
-    pass
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "data":
+            kwargs["foreign_key_descriptions"] = [
+                (
+                    "testapp.file",
+                    lambda data: paths_to_pks(
+                        data,
+                        to=models.File,
+                        paths=["file"],
+                    ),
+                ),
+            ]
+        return super().formfield_for_dbfield(db_field, request, **kwargs)

@@ -110,6 +110,7 @@ def test_json_editor_edit_save(page, live_server):
         data={
             "text": "Original text",
             "prose": "Original prose",
+            "file": File.objects.create(name="file-42.png").pk,
         }
     )
 
@@ -153,6 +154,9 @@ def test_json_editor_edit_save(page, live_server):
     textarea_json = page.evaluate("value => JSON.parse(value)", textarea_value)
     assert textarea_json["text"] == "Updated text"
     assert "New prose content" in textarea_json["prose"]
+
+    raw_id_field_label = page.locator(".django_json_schema_editor .form-control strong")
+    expect(raw_id_field_label).to_contain_text("file-42.png")
 
 
 @pytest.mark.django_db

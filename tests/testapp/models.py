@@ -30,6 +30,7 @@ class Thing(models.Model):
                     "format": "foreign_key",
                     "options": {
                         "url": "/admin/testapp/file/?_popup=1&_to_field=id",
+                        "model": "testapp.file",
                     },
                 },
             },
