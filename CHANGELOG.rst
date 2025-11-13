@@ -4,6 +4,9 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+- Cleaned up the implementation, added ``paths_to_pks`` to the fields module
+  for reuse.
+
 0.9 (2025-11-13)
 ~~~~~~~~~~~~~~~~
 

@@ -253,6 +253,15 @@ The `name` field will be the name of the underlying `ManyToManyField` which actu
 
 **Important**: The `get_image_ids` getter must be written defensively -- you cannot assume the model is valid. For example, you cannot assume that foreign key values are set (even when they are `null=False`). Django's validation hasn't cleared the model before the getter is invoked for the first time.
 
+You can use the `paths_to_pks` utility also; the `get_image_ids` implementation using it would look like this:
+
+```python
+from django_json_schema_editor.fields import paths_to_pks
+
+def get_image_ids(article):
+    return paths_to_pks(to=Image, paths=["featured_image"], data=article.data)
+```
+
 #### Streamlined Approach with foreign_key_paths
 
 For JSON plugins (see the feincms3 section below), the `foreign_key_paths` parameter provides a more declarative way to achieve the same result without writing manual getter functions. Instead of extracting values with custom Python code, you specify JMESPath expressions that locate foreign keys in your JSON structure.

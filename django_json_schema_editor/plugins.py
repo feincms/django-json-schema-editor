@@ -2,13 +2,14 @@ from functools import partial
 
 import jmespath
 from content_editor.admin import ContentEditorInline
+from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.query import ModelIterable
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
-from django_json_schema_editor.fields import JSONField
+from django_json_schema_editor.fields import JSONField, paths_to_pks
 from django_json_schema_editor.forms import JSONEditorField
 
 
@@ -103,47 +104,13 @@ class JSONPluginBase(models.Model):
                 foreign_key_paths := cls._proxy_types_foreign_key_paths.get(plugin.type)
             ) and (paths := foreign_key_paths.get(model._meta.label_lower)):
                 return paths_to_pks(
-                    plugin=plugin,
+                    to=model,
                     paths=paths,
                     data=plugin.data,
                 )
             return []
 
         cls.register_data_reference(model, name=name, getter=_getter)
-
-
-def flatten(lst):
-    """
-    Recursively flatten a list of values and nested lists
-    """
-    result = []
-    for item in lst:
-        if isinstance(item, list):
-            result.extend(flatten(item))
-        else:
-            result.append(item)
-    return result
-
-
-def paths_to_pks(*, plugin, paths, data):
-    """
-    Converts a list of JMES paths to a list of primary key values
-
-    Arguments:
-
-    - ``plugin``: The Django model instance or class, used to access the
-      primary key field's ``to_python`` method
-    - ``data``: The plugin data dictionary
-    - ``paths``: A list of JMES paths
-
-    The returned array is automatically flattened.
-    """
-    pk = plugin._meta.pk
-    return [
-        pk.to_python(value)
-        for value in flatten([jmespath.search(path, data) for path in paths])
-        if value
-    ]
 
 
 class JSONPluginInline(ContentEditorInline):
@@ -158,17 +125,14 @@ class JSONPluginInline(ContentEditorInline):
                     self.model.TYPE
                 )
             ):
-                foreign_key_descriptions = [
-                    (
-                        model,
-                        lambda data, paths=paths: paths_to_pks(
-                            plugin=self.model,
-                            paths=paths,
-                            data=data,
-                        ),
+                for model, paths in foreign_key_paths.items():
+                    to = apps.get_model(model)
+                    foreign_key_descriptions.append(
+                        (
+                            to._meta.label_lower,
+                            partial(paths_to_pks, to=to, paths=paths),
+                        )
                     )
-                    for model, paths in foreign_key_paths.items()
-                ]
             kwargs["form_class"] = partial(
                 JSONEditorField,
                 schema=self.model.SCHEMA,

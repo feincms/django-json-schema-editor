@@ -1,5 +1,6 @@
 from functools import partial
 
+import jmespath
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models
 from django.db.models import Q, signals
@@ -129,3 +130,37 @@ class JSONField(models.JSONField):
         super().validate(value, model_instance)
         for validator in self._reference_validators:
             validator(model_instance)
+
+
+def flatten(lst):
+    """
+    Recursively flatten a list of values and nested lists
+    """
+    result = []
+    for item in lst:
+        if isinstance(item, list):
+            result.extend(flatten(item))
+        else:
+            result.append(item)
+    return result
+
+
+def paths_to_pks(*, to, paths, data):
+    """
+    Converts a list of JMES paths to a list of primary key values
+
+    Arguments:
+
+    - ``to``: The Django model instance or class, used to access the primary
+      key field's ``to_python`` method
+    - ``data``: The data dictionary
+    - ``paths``: A list of JMES paths
+
+    The returned array is automatically flattened.
+    """
+    pk = to._meta.pk
+    return [
+        pk.to_python(value)
+        for value in flatten([jmespath.search(path, data) for path in paths])
+        if value
+    ]
