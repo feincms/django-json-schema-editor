@@ -357,7 +357,7 @@ The `foreign_key_paths` parameter:
 
 This provides two main benefits:
 
-1. **Referential Integrity**: When combined with `register_foreign_key()`, it automatically prevents referenced models from being deleted while they're in use
+1. **Referential Integrity**: When combined with `register_foreign_key_reference()`, it automatically prevents referenced models from being deleted while they're in use
 2. **Admin Display**: In the admin interface (via `JSONPluginInline`), foreign key values are automatically resolved to display human-readable labels
 
 ##### Setting Up Referential Integrity
@@ -366,7 +366,7 @@ After defining your plugin proxy classes, register them to maintain referential 
 
 ```python
 # Register foreign key relationships for all plugins
-ChapterStructuredData.register_foreign_key(
+ChapterStructuredData.register_foreign_key_reference(
     File,  # The model being referenced
     name="referenced_files",  # Name for the M2M relationship
 )

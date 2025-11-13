@@ -97,24 +97,25 @@ class JSONPluginBase(models.Model):
         return new_type
 
     @classmethod
-    def register_foreign_key(cls, model, *, name):
+    def register_foreign_key_reference(cls, model, *, name):
         def _getter(plugin):
             if (
                 foreign_key_paths := cls._proxy_types_foreign_key_paths.get(plugin.type)
             ) and (paths := foreign_key_paths.get(model._meta.label_lower)):
-                return [
-                    plugin._meta.pk.to_python(value)
-                    for value in flatten(
-                        [jmespath.search(path, plugin.data) for path in paths]
-                    )
-                    if value
-                ]
+                return paths_to_pks(
+                    plugin=plugin,
+                    paths=paths,
+                    data=plugin.data,
+                )
             return []
 
         cls.register_data_reference(model, name=name, getter=_getter)
 
 
 def flatten(lst):
+    """
+    Recursively flatten a list of values and nested lists
+    """
     result = []
     for item in lst:
         if isinstance(item, list):
@@ -122,6 +123,27 @@ def flatten(lst):
         else:
             result.append(item)
     return result
+
+
+def paths_to_pks(*, plugin, paths, data):
+    """
+    Converts a list of JMES paths to a list of primary key values
+
+    Arguments:
+
+    - ``plugin``: The Django model instance or class, used to access the
+      primary key field's ``to_python`` method
+    - ``data``: The plugin data dictionary
+    - ``paths``: A list of JMES paths
+
+    The returned array is automatically flattened.
+    """
+    pk = plugin._meta.pk
+    return [
+        pk.to_python(value)
+        for value in flatten([jmespath.search(path, data) for path in paths])
+        if value
+    ]
 
 
 class JSONPluginInline(ContentEditorInline):
@@ -139,8 +161,10 @@ class JSONPluginInline(ContentEditorInline):
                 foreign_key_descriptions = [
                     (
                         model,
-                        lambda data, paths=paths: flatten(
-                            [jmespath.search(path, data) for path in paths]
+                        lambda data, paths=paths: paths_to_pks(
+                            plugin=self.model,
+                            paths=paths,
+                            data=data,
                         ),
                     )
                     for model, paths in foreign_key_paths.items()
