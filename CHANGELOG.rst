@@ -4,8 +4,16 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+0.10 (2025-11-17)
+~~~~~~~~~~~~~~~~~
+
 - Cleaned up the implementation, added ``paths_to_pks`` to the fields module
   for reuse.
+- **Backwards incompatible**: Changed the ``JSONPluginBase.proxy`` classmethod
+  to add keyword arguments passed to it to the class and not to the ``Meta``
+  class. To add to the ``Meta`` class, use the ``meta`` keyword argument. The
+  ``verbose_name`` argument which is also used in the documentation continues
+  to work.
 
 0.9 (2025-11-13)
 ~~~~~~~~~~~~~~~~

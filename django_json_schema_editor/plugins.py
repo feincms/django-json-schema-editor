@@ -67,10 +67,20 @@ class JSONPluginBase(models.Model):
         return super().get_queryset().downcast()
 
     @classmethod
-    def proxy(cls, type_name, *, schema, foreign_key_paths=None, **meta):
+    def proxy(
+        cls,
+        type_name,
+        *,
+        schema,
+        foreign_key_paths=None,
+        verbose_name=None,
+        meta=None,
+        **class_dict,
+    ):
+        meta = {} if meta is None else meta
         meta["proxy"] = True
         meta["app_label"] = cls._meta.app_label
-        meta.setdefault("verbose_name", type_name)
+        meta.setdefault("verbose_name", verbose_name or type_name)
 
         meta_class = type("Meta", (cls.Meta,), meta)
 
@@ -91,7 +101,8 @@ class JSONPluginBase(models.Model):
                 "Meta": meta_class,
                 "TYPE": type_name,
                 "SCHEMA": schema,
-            },
+            }
+            | class_dict,
         )
         cls._proxy_types_map[type_name] = new_type
         cls._proxy_types_foreign_key_paths[type_name] = foreign_key_paths or {}
