@@ -190,6 +190,8 @@
 .django_json_schema_editor
   input:not(.vForeignKeyRawIdAdminField, [type="checkbox"], [type="radio"]) {
   width: calc(100% - 16px);
+  /* Override the error style, if any */
+  border-color: var(--border-color);
 }
 
 .django_json_schema_editor
