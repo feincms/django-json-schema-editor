@@ -4,6 +4,10 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+
+0.11 (2025-11-19)
+~~~~~~~~~~~~~~~~~
+
 - **Backwards incompatible**: Changed the ``JSONPluginBase.proxy`` classmethod
   signature. The ``**class_dict`` parameter (introduced in 0.10) has been
   replaced with a ``mixins`` parameter that accepts a list or tuple of mixin
