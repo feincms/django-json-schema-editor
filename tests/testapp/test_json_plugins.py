@@ -243,3 +243,173 @@ def test_json_plugin_admin(page, live_server):
 
     raw_id_field_label = page.locator(".django_json_schema_editor .form-control strong")
     expect(raw_id_field_label).to_contain_text("test.png")
+
+
+@pytest.mark.django_db
+def test_proxy_with_single_mixin():
+    """Test that proxy accepts a single mixin class."""
+
+    class CustomMixin:
+        def custom_method(self):
+            return "custom_value"
+
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_single_mixin",
+        schema={"type": "object"},
+        mixins=[CustomMixin],
+    )
+
+    # Verify mixin is in MRO
+    assert CustomMixin in ProxyPlugin.__mro__
+
+    # Create an article and plugin instance
+    article = models.Article.objects.create()
+    plugin = ProxyPlugin.objects.create(
+        parent=article, region="main", ordering=10, data={}
+    )
+
+    # Verify mixin method is accessible
+    assert plugin.custom_method() == "custom_value"
+
+
+@pytest.mark.django_db
+def test_proxy_with_multiple_mixins():
+    """Test that proxy accepts multiple mixin classes."""
+
+    class MixinA:
+        def method_a(self):
+            return "a"
+
+    class MixinB:
+        def method_b(self):
+            return "b"
+
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_multiple_mixins",
+        schema={"type": "object"},
+        mixins=[MixinA, MixinB],
+    )
+
+    # Verify both mixins are in MRO
+    assert MixinA in ProxyPlugin.__mro__
+    assert MixinB in ProxyPlugin.__mro__
+
+    # Create an article and plugin instance
+    article = models.Article.objects.create()
+    plugin = ProxyPlugin.objects.create(
+        parent=article, region="main", ordering=10, data={}
+    )
+
+    # Verify both mixin methods are accessible
+    assert plugin.method_a() == "a"
+    assert plugin.method_b() == "b"
+
+
+@pytest.mark.django_db
+def test_proxy_mixin_method_resolution_order():
+    """Test that mixin MRO follows Python's standard resolution order."""
+
+    class MixinA:
+        def shared_method(self):
+            return "from_a"
+
+    class MixinB:
+        def shared_method(self):
+            return "from_b"
+
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_mro",
+        schema={"type": "object"},
+        mixins=[MixinA, MixinB],
+    )
+
+    # Create an article and plugin instance
+    article = models.Article.objects.create()
+    plugin = ProxyPlugin.objects.create(
+        parent=article, region="main", ordering=10, data={}
+    )
+
+    # First mixin should take precedence
+    assert plugin.shared_method() == "from_a"
+
+
+@pytest.mark.django_db
+def test_proxy_without_mixins_default():
+    """Test that proxy works without mixins parameter (default empty tuple)."""
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_no_mixins",
+        schema={"type": "object"},
+    )
+
+    # Create an article and plugin instance
+    article = models.Article.objects.create()
+    plugin = ProxyPlugin.objects.create(
+        parent=article, region="main", ordering=10, data={}
+    )
+
+    # Should work normally without mixins
+    assert plugin.type == "test_no_mixins"
+
+
+@pytest.mark.django_db
+def test_proxy_with_meta_parameter():
+    """Test that meta parameter adds to Meta class."""
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_meta",
+        schema={"type": "object"},
+        meta={"ordering": ["-id"]},
+    )
+
+    # Verify meta attribute is set
+    assert ProxyPlugin._meta.ordering == ["-id"]
+
+
+@pytest.mark.django_db
+def test_proxy_mixin_with_properties():
+    """Test that mixin can add properties to proxy class."""
+
+    class PropertyMixin:
+        @property
+        def computed_value(self):
+            return f"computed_{self.type}"
+
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_property",
+        schema={"type": "object"},
+        mixins=[PropertyMixin],
+    )
+
+    # Create an article and plugin instance
+    article = models.Article.objects.create()
+    plugin = ProxyPlugin.objects.create(
+        parent=article, region="main", ordering=10, data={}
+    )
+
+    assert plugin.computed_value == "computed_test_property"
+
+
+@pytest.mark.django_db
+def test_proxy_mixin_access_to_schema_and_type():
+    """Test that mixin can access TYPE and SCHEMA class attributes."""
+
+    class AccessMixin:
+        def get_schema_title(self):
+            return self.SCHEMA.get("title", "No title")
+
+        def get_type_name(self):
+            return self.TYPE
+
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_access",
+        schema={"type": "object", "title": "Test Schema"},
+        mixins=[AccessMixin],
+    )
+
+    # Create an article and plugin instance
+    article = models.Article.objects.create()
+    plugin = ProxyPlugin.objects.create(
+        parent=article, region="main", ordering=10, data={}
+    )
+
+    assert plugin.get_schema_title() == "Test Schema"
+    assert plugin.get_type_name() == "test_access"

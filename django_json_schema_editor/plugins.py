@@ -75,7 +75,7 @@ class JSONPluginBase(models.Model):
         foreign_key_paths=None,
         verbose_name=None,
         meta=None,
-        **class_dict,
+        mixins=None,
     ):
         meta = {} if meta is None else meta
         meta["proxy"] = True
@@ -93,16 +93,18 @@ class JSONPluginBase(models.Model):
                 f"The proxy type {type_name!r} has already been registered on {cls!r}."
             )
 
+        # Convert mixins to tuple if provided as list
+        mixins_tuple = tuple(mixins) if mixins else ()
+
         new_type = type(
             f"{cls.__qualname__}_{type_name}",
-            (cls,),
+            (*mixins_tuple, cls),
             {
                 "__module__": cls.__module__,
                 "Meta": meta_class,
                 "TYPE": type_name,
                 "SCHEMA": schema,
-            }
-            | class_dict,
+            },
         )
         cls._proxy_types_map[type_name] = new_type
         cls._proxy_types_foreign_key_paths[type_name] = foreign_key_paths or {}

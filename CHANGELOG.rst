@@ -4,6 +4,36 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+- **Backwards incompatible**: Changed the ``JSONPluginBase.proxy`` classmethod
+  signature. The ``**class_dict`` parameter (introduced in 0.10) has been
+  replaced with a ``mixins`` parameter that accepts a list or tuple of mixin
+  classes. This provides a cleaner, more explicit pattern for extending proxy
+  plugin functionality.
+
+  Before (0.10 only)::
+
+      MyPlugin = JSONPluginBase.proxy(
+          "my_plugin",
+          schema={...},
+          custom_method=lambda self: "value",  # Added to class body
+      )
+
+  After::
+
+      class MyMixin:
+          def custom_method(self):
+              return "value"
+
+      MyPlugin = JSONPluginBase.proxy(
+          "my_plugin",
+          schema={...},
+          mixins=[MyMixin],
+      )
+
+  The ``meta`` parameter (introduced in 0.10) continues to work for adding
+  attributes to the ``Meta`` class. The ``verbose_name`` parameter also
+  continues to work as before.
+
 0.10 (2025-11-17)
 ~~~~~~~~~~~~~~~~~
 
