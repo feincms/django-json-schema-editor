@@ -388,6 +388,38 @@ This will automatically:
 
 The `foreign_key_paths` approach is more maintainable than manually writing getter functions, especially when dealing with nested arrays or multiple foreign key fields in your JSON schema.
 
+#### Extending Proxy Plugins with Mixins
+
+When creating proxy plugins with `JSONPluginBase.proxy()`, you can add custom functionality using the `mixins` parameter:
+
+```python
+from django_json_schema_editor.plugins import JSONPluginBase
+
+class RenderMixin:
+    def render(self):
+        """Custom rendering logic for this plugin type."""
+        return f"<div>{self.data.get('content', '')}</div>"
+
+TextPlugin = JSONPluginBase.proxy(
+    "text",
+    verbose_name="Text Block",
+    schema={
+        "type": "object",
+        "properties": {
+            "content": {"type": "string", "format": "prose"},
+        },
+    },
+    mixins=[RenderMixin],
+)
+```
+
+**Why mixins instead of subclassing?** Proxy plugins created with `.proxy()` are automatically registered in an internal map. This registration enables the QuerySet's `.downcast()` method to return the correct proxy class for each plugin type. If you were to subclass the returned proxy further, those subclasses wouldn't be registered, and `.downcast()` would return the base proxy instead of your extended version.
+
+The `mixins` parameter accepts a list or tuple of mixin classes that will be added to the proxy's method resolution order (MRO), allowing you to:
+- Add custom methods and properties
+- Override base class behavior
+- Share functionality across multiple plugin types
+
 ## Development
 
 To set up the development environment:
