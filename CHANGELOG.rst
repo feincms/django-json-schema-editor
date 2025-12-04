@@ -6,6 +6,8 @@ Next version
 
 - Added the material icons library and added the iconlib integration for it to
   the JSON editor by default.
+- Added official compatibility with Django 6.0, dropped 5.1 from CI (we still
+  support 4.2).
 
 
 0.11 (2025-11-19)
