@@ -4,6 +4,10 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+
+0.12 (2025-12-04)
+~~~~~~~~~~~~~~~~~
+
 - Added the material icons library and added the iconlib integration for it to
   the JSON editor by default.
 - Added official compatibility with Django 6.0, dropped 5.1 from CI (we still
