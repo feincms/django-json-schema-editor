@@ -4,6 +4,9 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+- Added the material icons library and added the iconlib integration for it to
+  the JSON editor by default.
+
 
 0.11 (2025-11-19)
 ~~~~~~~~~~~~~~~~~

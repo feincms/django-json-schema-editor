@@ -31,6 +31,7 @@ DEFAULT_CONFIG = getattr(
         # "disable_edit_json": True,
         "display_required_only": False,
         "theme": "django",
+        "iconlib": "django",
     },
 )
 
@@ -109,7 +110,10 @@ class JSONEditorWidget(forms.Textarea):
     @property
     def media(self):
         css = {
-            "screen": ["django_json_schema_editor/django_theme.css"],
+            "screen": [
+                "django_json_schema_editor/vendor/material-icons.css",
+                "django_json_schema_editor/django_theme.css",
+            ],
         }
         js = [
             importmap,

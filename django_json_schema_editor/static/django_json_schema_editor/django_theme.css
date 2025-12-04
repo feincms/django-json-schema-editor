@@ -247,3 +247,7 @@
 label:empty:has(+ .django_json_schema_editor) {
   display: none;
 }
+
+.django_json_schema_editor .material-icons {
+  font-size: 1em;
+}
