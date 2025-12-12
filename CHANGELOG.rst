@@ -4,6 +4,8 @@ Change log
 Next version
 ~~~~~~~~~~~~
 
+- Fixed the material icons icon size to only apply to JSON editor buttons.
+
 
 0.12 (2025-12-04)
 ~~~~~~~~~~~~~~~~~
