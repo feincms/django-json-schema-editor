@@ -2,13 +2,13 @@ Change log
 ==========
 
 Next version
-~~~~~~~~~~~~
+------------
 
 - Fixed the material icons icon size to only apply to JSON editor buttons.
 
 
 0.12 (2025-12-04)
-~~~~~~~~~~~~~~~~~
+-----------------
 
 - Added the material icons library and added the iconlib integration for it to
   the JSON editor by default.
@@ -17,7 +17,7 @@ Next version
 
 
 0.11 (2025-11-19)
-~~~~~~~~~~~~~~~~~
+-----------------
 
 - **Backwards incompatible**: Changed the ``JSONPluginBase.proxy`` classmethod
   signature. The ``**class_dict`` parameter (introduced in 0.10) has been
@@ -50,7 +50,7 @@ Next version
   continues to work as before.
 
 0.10 (2025-11-17)
-~~~~~~~~~~~~~~~~~
+-----------------
 
 - Cleaned up the implementation, added ``paths_to_pks`` to the fields module
   for reuse.
@@ -61,7 +61,7 @@ Next version
   to work.
 
 0.9 (2025-11-13)
-~~~~~~~~~~~~~~~~
+----------------
 
 - **Backwards incompatible change to ``JSONPluginBase``** The JSON pointer
   usage has been replaced by jmespath usage. ``__str__`` values in schemas for
@@ -82,7 +82,7 @@ Next version
 
 
 0.8 (2025-09-25)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Fixed the initialization of the JSON editor when we start with null values.
 - Changed the ID attributes of generated elements to hopefully be unique by
@@ -91,7 +91,7 @@ Next version
 
 
 0.7 (2025-09-05)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Reverted the ``required_by_default`` change, it was bad (tm) because it
   didn't allow removing existing properties at all. Better learn setting the
@@ -99,7 +99,7 @@ Next version
 
 
 0.6 (2025-09-05)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Added validation for foreign key references to provide meaningful error
   messages instead of server crashes when invalid primary keys are entered.
@@ -108,7 +108,7 @@ Next version
   ``onChange`` updates.
 
 0.5 (2025-06-26)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Fixed the size of checkboxes in the JSON editor.
 - Added configurable extensions support for the prose editor, allowing
@@ -116,7 +116,7 @@ Next version
 
 
 0.4 (2025-03-24)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Added a simple e2e test suite.
 - Improved the prose editor integration, added the required importmap
@@ -125,7 +125,7 @@ Next version
 
 
 0.3 (2025-03-20)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Fixed the JSON plugin data reference handling.
 - Added a ``[prose]`` extra depending on the newest alpha version of
@@ -133,7 +133,7 @@ Next version
 
 
 0.2 (2024-12-04)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Included the `django-prose-editor
   <https://django-prose-editor.readthedocs.io/>`__ support by default, it's a
@@ -143,6 +143,6 @@ Next version
 
 
 0.1 (2024-08-02)
-~~~~~~~~~~~~~~~~
+----------------
 
 - Initial beta release.

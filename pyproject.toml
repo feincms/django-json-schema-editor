@@ -7,7 +7,7 @@ requires = [
 [project]
 name = "django-json-schema-editor"
 description = "Django widget for using @json-editor/json-editor in the admin"
-readme = "README.md"
+readme = "README.rst"
 license = { text = "MIT" }
 authors = [
   { name = "Matthias Kestenholz", email = "mk@feinheit.ch" },
