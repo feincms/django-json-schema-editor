@@ -158,9 +158,8 @@ def paths_to_pks(data, *, to, paths):
 
     The returned array is automatically flattened.
     """
-    pk = to._meta.pk
     return [
-        pk.to_python(value)
+        value
         for value in flatten([jmespath.search(path, data) for path in paths])
         if value
     ]

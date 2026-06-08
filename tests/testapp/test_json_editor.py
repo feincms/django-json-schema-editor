@@ -9,7 +9,7 @@ from django.db.models.deletion import ProtectedError
 from playwright.sync_api import expect
 
 from django_json_schema_editor.forms import resolve_foreign_key_descriptions
-from testapp.models import File, Thing
+from testapp.models import Article, Download, File, Thing
 
 
 # Set Django async unsafe to allow database operations in tests
@@ -414,6 +414,34 @@ def test_invalid_unparseable_foreign_key_references():
     assert "asdf" in error_message
 
     thing.delete()
+
+
+@pytest.mark.django_db
+def test_paths_to_pks_unparseable_value():
+    """Unparseable FK via paths_to_pks must not crash on save, must report a
+    proper ValidationError on full_clean, and must not affect valid references."""
+    article = Article.objects.create()
+    real_file = File.objects.create(name="real.txt")
+
+    # Valid reference: save must create a DB reference and validation must pass
+    valid_plugin = Download.objects.create(
+        parent=article, region="main", ordering=10, data={"file": real_file.pk}
+    )
+    valid_plugin.full_clean()
+    assert valid_plugin.files.filter(pk=real_file.pk).exists()
+
+    # Invalid reference: save must not crash; full_clean must report the right error
+    invalid_plugin = Download.objects.create(
+        parent=article, region="main", ordering=20, data={"file": "not-an-integer"}
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        invalid_plugin.full_clean()
+    error = str(exc_info.value)
+    assert "Some of the references are invalid" in error
+    assert "not-an-integer" in error
+
+    # Valid reference is unaffected
+    assert valid_plugin.files.filter(pk=real_file.pk).exists()
 
 
 @pytest.mark.django_db
