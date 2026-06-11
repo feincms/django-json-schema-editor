@@ -5,6 +5,8 @@ Next version
 ------------
 
 - Fixed the material icons icon size to only apply to JSON editor buttons.
+- Updated the django-js-asset and django-prose-editor dependencies, reworked
+  the code to use the new importmap support in django-js-asset>=4.
 
 
 0.12 (2025-12-04)

@@ -10,16 +10,21 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.text import Truncator
 from django.utils.translation import get_language
-from js_asset import JS, importmap
+from js_asset import JS, ImportMap, Media
 
 
-# Optional import for prose editor support. The import has the side effect of
-# updating the importmap with the necessary entries our prose editor plugin
-# needs.
+# Our prose editor plugin (``prose_editor.js``) imports
+# "django-prose-editor/configurable", which in turn imports
+# "django-prose-editor/editor". Reuse django-prose-editor's own import map (it
+# maps both) so we never duplicate or drift from its static paths.
+# ``js_asset.Media`` merges it with any other import maps on the page into a
+# single ``<script type="importmap">``. When django-prose-editor is not
+# installed the map stays empty and renders nothing, so the integration is
+# gracefully disabled.
 try:
-    import django_prose_editor.widgets  # noqa: F401
+    from django_prose_editor.widgets import importmap
 except ImportError:
-    pass  # Prose editor functionality will be gracefully unavailable
+    importmap = ImportMap({})
 
 
 DEFAULT_CONFIG = getattr(
@@ -126,4 +131,4 @@ class JSONEditorWidget(forms.Textarea):
         language = get_language()
         if language in self.supported_translations:
             js.append(f"django_json_schema_editor/language_{language}.js")
-        return forms.Media(css=css, js=js)
+        return Media(css=css, js=js)
