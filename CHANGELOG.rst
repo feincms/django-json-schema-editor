@@ -4,6 +4,9 @@ Change log
 Next version
 ------------
 
+- Improve german translations.
+
+
 0.13 (2026-06-11)
 -----------------
 
