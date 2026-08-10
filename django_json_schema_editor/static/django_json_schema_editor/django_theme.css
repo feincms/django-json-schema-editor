@@ -13,7 +13,8 @@
 }
 
 /* Hide the first title since it's useless */
-.django_json_schema_editor > :not([data-schematype="array"])
+.django_json_schema_editor
+  > :not([data-schematype="array"])
   > .je-header:first-child {
   display: none;
 }
@@ -58,7 +59,8 @@
 }
 
 /* ... but add it back to the first object container */
-.django_json_schema_editor .row:first-child
+.django_json_schema_editor
+  .row:first-child
   > .je-object__container:first-child {
   margin-top: 0.5rem;
 }
@@ -72,7 +74,8 @@
 }
 
 /* See above; first title is hidden, reset the negative top margin in this case */
-.django_json_schema_editor > :not([data-schematype="array"])
+.django_json_schema_editor
+  > :not([data-schematype="array"])
   > .je-header:first-child
   ~ .indented-panel {
   margin-top: 0;

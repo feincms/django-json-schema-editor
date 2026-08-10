@@ -103,7 +103,7 @@ class JSONField(models.JSONField):
         super().__init__(*args, **kwargs)
 
     def deconstruct(self):
-        name, path, args, kwargs = super().deconstruct()
+        name, _path, args, kwargs = super().deconstruct()
         return name, "django.db.models.JSONField", args, kwargs
 
     def formfield(self, **kwargs):
