@@ -78,6 +78,12 @@ Text = JSONPlugin.proxy(
     "text",
     schema={"__str__": "text", "properties": {"text": {"type": "string"}}},
 )
+# A plugin which is configured entirely by its placement -- there is nothing to
+# fill in, so nothing ever writes into its textarea either.
+Marker = JSONPlugin.proxy(
+    "marker",
+    schema={"type": "object", "title": "Marker", "properties": {}},
+)
 Download = JSONPlugin.proxy(
     "file",
     schema={

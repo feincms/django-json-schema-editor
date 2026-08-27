@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from playwright.sync_api import expect
 
@@ -413,3 +414,38 @@ def test_proxy_mixin_access_to_schema_and_type():
 
     assert plugin.get_schema_title() == "Test Schema"
     assert plugin.get_type_name() == "test_access"
+
+
+@pytest.mark.django_db
+def test_fieldless_plugin_saves_without_help_from_the_editor(rf, admin_user):
+    """
+    A plugin without a single field is saveable.
+
+    Nothing ever types into its editor, so the value the inline starts out with
+    is the only one it will ever be submitted with.
+    """
+    request = rf.get("/admin/")
+    request.user = admin_user
+
+    article_admin = admin.site._registry[models.Article]
+    inline = next(
+        inline
+        for inline in article_admin.get_inline_instances(request)
+        if inline.model is models.Marker
+    )
+    form_class = inline.get_formset(request).form
+
+    article = models.Article.objects.create()
+    form = form_class(
+        {
+            "parent": article.pk,
+            "region": "main",
+            "ordering": "10",
+            "data": "",
+        }
+    )
+    assert form.is_valid(), form.errors
+
+    marker = form.save()
+    assert marker.data == {}
+    assert marker.type == "marker"

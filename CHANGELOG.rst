@@ -6,6 +6,12 @@ Next version
 
 - Improve german translations.
 - Added Django 6.1, Python 3.14.
+- Stopped rejecting fields which may be left empty and were: a blank value now
+  falls back to the emptiness the schema asks for (``{}`` for an object, ``[]``
+  for an array, the schema's own ``default`` if it has one) instead of failing
+  validation with e.g. ``data must be object``. This makes plugins whose schema
+  has no properties at all saveable -- nothing ever writes into their editor,
+  so an empty submission was the only one they had.
 
 
 0.13 (2026-06-11)

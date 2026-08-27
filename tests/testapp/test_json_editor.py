@@ -8,7 +8,11 @@ from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
 from playwright.sync_api import expect
 
-from django_json_schema_editor.forms import resolve_foreign_key_descriptions
+from django_json_schema_editor.forms import (
+    JSONEditorField,
+    empty_value_for_schema,
+    resolve_foreign_key_descriptions,
+)
 from testapp.models import Article, Download, File, Thing
 
 
@@ -584,3 +588,56 @@ def test_validation():
     form = ThingForm({"data": json.dumps({"stuff": "123"})})
     assert not form.is_valid()
     assert "data.stuff must match pattern" in str(form.errors)
+
+
+def test_empty_value_for_schema():
+    assert empty_value_for_schema(None) is None
+    assert empty_value_for_schema({}) is None
+    assert empty_value_for_schema({"type": "object"}) == {}
+    assert empty_value_for_schema({"type": "array"}) == []
+    # Nothing sensible to substitute for these.
+    assert empty_value_for_schema({"type": "string"}) is None
+    assert empty_value_for_schema({"properties": {"text": {"type": "string"}}}) is None
+    # Schemas which are happy with None keep it.
+    assert empty_value_for_schema({"type": ["object", "null"]}) is None
+    # ... and a schema which says what it wants gets that.
+    assert empty_value_for_schema({"type": "object", "default": {"a": 1}}) == {"a": 1}
+
+
+def test_blank_field_uses_the_schemas_emptiness():
+    """
+    An empty field must not be rejected for not being an object.
+
+    The editor only writes into the textarea once it is ready, so a field which
+    may be left empty may really arrive empty -- through no fault of whoever
+    submitted the form.
+    """
+
+    class Form(forms.Form):
+        data = JSONEditorField(
+            schema={"type": "object", "properties": {}}, required=False
+        )
+
+    form = Form({"data": ""})
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["data"] == {}
+
+
+def test_blank_field_without_an_emptiness_skips_validation():
+    """There is nothing to substitute for a blank string field, so don't try."""
+
+    class Form(forms.Form):
+        data = JSONEditorField(schema={"type": "string"}, required=False)
+
+    form = Form({"data": ""})
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["data"] is None
+
+
+def test_required_field_still_requires_a_value():
+    class Form(forms.Form):
+        data = JSONEditorField(schema={"type": "object", "properties": {}})
+
+    form = Form({"data": ""})
+    assert not form.is_valid()
+    assert form.errors == {"data": ["This field is required."]}

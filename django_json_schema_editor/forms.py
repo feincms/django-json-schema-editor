@@ -41,11 +41,41 @@ DEFAULT_CONFIG = getattr(
 )
 
 
+def empty_value_for_schema(schema):
+    """
+    Return the emptiness a schema asks for, or ``None`` if it asks for nothing.
+
+    Used as the fallback for fields which may be left empty: ``None`` validates
+    against almost no schema, and rejecting a blank field would blame whoever
+    submitted the form for a value they never entered. Schemas which are fine
+    with ``None`` (they allow the null type, or say so through their own
+    default) keep it.
+
+    Note that this is deliberately not used as the field's ``initial``: a
+    ``startval`` of ``{}`` makes the JSON editor drop the properties it would
+    otherwise offer on an empty form.
+    """
+    if not schema:
+        return None
+    if "default" in schema:
+        return schema["default"]
+    types = schema.get("type")
+    types = types if isinstance(types, list) else [types]
+    if "null" in types:
+        return None
+    if "object" in types:
+        return {}
+    if "array" in types:
+        return []
+    return None
+
+
 class JSONEditorField(forms.JSONField):
     def __init__(self, *args, **kwargs):
         self._config = kwargs.pop("config", {})
         self._schema = kwargs.pop("schema")
         self._foreign_key_descriptions = kwargs.pop("foreign_key_descriptions", [])
+        self._empty_value = empty_value_for_schema(self._schema)
         kwargs["widget"] = JSONEditorWidget
         super().__init__(*args, **kwargs)
         if self._config:
@@ -56,6 +86,20 @@ class JSONEditorField(forms.JSONField):
 
     def clean(self, value):
         value = super().clean(value)
+
+        if value is None:
+            # Required fields never get here -- ``super().clean()`` has
+            # already rejected them. So this is a field which may be left
+            # empty, and was. That happens for real: the editor only writes
+            # into the textarea once it is ready (and not at all if the tab
+            # stays hidden), and for a schema without any properties that
+            # write is the only thing which would ever fill it. Use the
+            # schema's emptiness instead of validating ``None``, and skip
+            # validation altogether if the schema is fine with ``None``.
+            value = self._empty_value
+            if value is None:
+                return value
+
         if schema := self._schema:
             try:
                 fastjsonschema.validate(schema, value, use_formats=False)
