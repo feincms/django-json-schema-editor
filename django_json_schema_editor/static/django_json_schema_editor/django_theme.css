@@ -1,6 +1,7 @@
 .django_json_schema_editor {
   clear: both;
   flex-grow: 1;
+  align-self: stretch;
 }
 
 /* Use a minimal height for the JSON editor when a modal is open */
