@@ -5,6 +5,7 @@ Next version
 ------------
 
 - Improve german translations.
+- Added Django 6.1, Python 3.14.
 
 
 0.13 (2026-06-11)
