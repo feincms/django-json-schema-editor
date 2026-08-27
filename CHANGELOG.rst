@@ -4,6 +4,9 @@ Change log
 Next version
 ------------
 
+0.14 (2026-08-27)
+-----------------
+
 - Improve german translations.
 - Added Django 6.1, Python 3.14.
 - Stopped rejecting fields which may be left empty and were: a blank value now
