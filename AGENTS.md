@@ -78,13 +78,16 @@ The project supports two approaches for handling foreign key references in JSON 
 ```python
 from django_json_schema_editor.fields import JSONField
 
+
 class Article(models.Model):
     data = JSONField(schema={...})
+
 
 def get_image_ids(article):
     if image_id := article.data.get("featured_image"):
         return [int(image_id)]
     return []
+
 
 Article.register_data_reference(Image, name="featured_images", getter=get_image_ids)
 ```
@@ -130,7 +133,7 @@ Fields can use the `"format": "prose"` option in their JSON schema to enable dja
             "Bold": True,
             "Italic": True,
         }
-    }
+    },
 }
 ```
 
