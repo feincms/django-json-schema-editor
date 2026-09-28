@@ -34,4 +34,5 @@ class ArticleAdmin(ContentEditor):
         JSONPluginInline.create(models.Text),
         JSONPluginInline.create(models.Download),
         JSONPluginInline.create(models.Marker),
+        JSONPluginInline.create(models.Gallery),
     ]

@@ -247,6 +247,44 @@ def test_json_plugin_admin(page, live_server):
 
 
 @pytest.mark.django_db
+@pytest.mark.e2e
+def test_object_controls_popover_stays_inside_editor(page, live_server):
+    """Object controls sit in the top right corner of their object and their
+    popovers open towards the left so that they stay inside the editor."""
+    login_admin(page, live_server)
+
+    article = models.Article.objects.create()
+    models.Gallery.objects.create(
+        parent=article,
+        region="main",
+        ordering=10,
+        data={"title": "Gallery", "images": [{"caption": "A", "alt": "B"}]},
+    )
+
+    page.goto(f"{live_server.url}/admin/testapp/article/{article.pk}/change/")
+
+    def right(box):
+        return box["x"] + box["width"]
+
+    for schemapath in ["djse1", "djse1.images.0"]:
+        container = page.locator(f"[data-schemapath$='{schemapath}']").first
+        controls = container.locator("> .je-object__controls")
+        expect(controls).to_be_visible()
+        assert (
+            abs(right(controls.bounding_box()) - right(container.bounding_box())) <= 2
+        )
+
+        controls.locator(".json-editor-btntype-properties").click()
+        popover = controls.locator(".je-modal").nth(1)
+        expect(popover).to_be_visible()
+        assert abs(right(popover.bounding_box()) - right(controls.bounding_box())) <= 2
+
+        # Close the popover again
+        controls.locator(".json-editor-btntype-properties").click()
+        expect(popover).not_to_be_visible()
+
+
+@pytest.mark.django_db
 def test_proxy_with_single_mixin():
     """Test that proxy accepts a single mixin class."""
 

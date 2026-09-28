@@ -103,3 +103,27 @@ Download = JSONPlugin.proxy(
         "testapp.file": ["file"],
     },
 )
+
+# A plugin with nested objects, each of which gets its own object controls.
+Gallery = JSONPlugin.proxy(
+    "gallery",
+    schema={
+        "type": "object",
+        "title": "Gallery",
+        "properties": {
+            "title": {"type": "string"},
+            "images": {
+                "type": "array",
+                "title": "Images",
+                "items": {
+                    "type": "object",
+                    "title": "Image",
+                    "properties": {
+                        "caption": {"type": "string"},
+                        "alt": {"type": "string"},
+                    },
+                },
+            },
+        },
+    },
+)

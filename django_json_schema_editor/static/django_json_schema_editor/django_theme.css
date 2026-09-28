@@ -70,18 +70,6 @@
   border-top: 1px solid var(--hairline-color);
 }
 
-.django_json_schema_editor .je-object__title ~ .indented-panel {
-  margin-top: -12px;
-}
-
-/* See above; first title is hidden, reset the negative top margin in this case */
-.django_json_schema_editor
-  > :not([data-schematype="array"])
-  > .je-header:first-child
-  ~ .indented-panel {
-  margin-top: 0;
-}
-
 .django_json_schema_editor [data-schematype="boolean"] .form-control label {
   float: none;
   width: auto;
@@ -108,13 +96,56 @@
   margin-right: 2px;
 }
 
-.django_json_schema_editor > * > .je-button-holder {
-  transform: scale(0.75);
-  transform-origin: top right;
+/*
+ * Object controls (JSON / properties) sit in the top right corner of their
+ * object: nested objects show them inside their title bar, the top level
+ * object (whose title is hidden) shows them as tabs on top of its border.
+ */
+.django_json_schema_editor .je-object__container {
+  position: relative;
+}
+
+.django_json_schema_editor .je-object__controls {
   position: absolute;
-  top: -20px;
-  right: 20%;
+  top: 0;
+  right: 0;
   z-index: 1;
+  padding: 0;
+}
+
+.django_json_schema_editor .je-object__controls > .button {
+  margin: 0 0 0 2px;
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.django_json_schema_editor > .je-object__container {
+  margin-top: 18px;
+}
+
+.django_json_schema_editor > .je-object__container > .je-object__controls {
+  top: auto;
+  bottom: 100%;
+  right: -1px;
+}
+
+.django_json_schema_editor
+  > .je-object__container
+  > .je-object__controls
+  > .button {
+  border-radius: 4px 4px 0 0;
+}
+
+/* json-editor sets an inline left/top offset when opening a modal, which
+ * makes it open towards the right and overflow the editor. Anchor modals to
+ * the right edge of the controls instead so that they open towards the left. */
+.django_json_schema_editor .je-object__controls > .je-modal {
+  top: 100% !important;
+  left: auto !important;
+  right: 0;
+  width: max-content;
+  margin-top: 2px;
 }
 
 .django_json_schema_editor .je-modal textarea {
