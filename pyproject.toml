@@ -35,12 +35,12 @@ dependencies = [
   "jmespath",
 ]
 optional-dependencies.prose = [
-  "django-prose-editor>=0.26",
+  "django-prose-editor>=0.28a1",
 ]
 optional-dependencies.tests = [
   "asgiref",
   "coverage",
-  "django-content-editor",
+  "django-content-editor>=9.1a1",
   "pytest",
   "pytest-asyncio",
   "pytest-cov",
