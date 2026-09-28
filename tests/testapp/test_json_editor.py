@@ -33,6 +33,12 @@ def login_admin(page, live_server):
     page.wait_for_url(f"{live_server.url}/admin/")
 
 
+def save_admin(page):
+    """Submit the admin form and wait until the object has been saved."""
+    page.click('input[name="_save"]')
+    expect(page.locator(".messagelist .success")).to_be_visible()
+
+
 @pytest.mark.django_db
 @pytest.mark.e2e
 def test_json_editor_admin_form(page, live_server):
@@ -138,7 +144,7 @@ def test_json_editor_edit_save(page, live_server):
     page.keyboard.type("New prose content")
 
     # Submit the form to save changes
-    page.click('input[name="_save"]')
+    save_admin(page)
 
     # Navigate back to the object to verify the changes were saved
     page.goto(f"{live_server.url}/admin/testapp/thing/{thing.pk}/change/")
@@ -336,7 +342,7 @@ def test_foreign_key_selector(page, live_server):
     # We've successfully verified the input field has the correct value
 
     # Save the form to check if the foreign key is properly stored
-    page.click('input[name="_save"]')
+    save_admin(page)
 
     # Verify the data in the database
     thing.refresh_from_db()
