@@ -165,7 +165,6 @@ class JSONEditorWidget(forms.Textarea):
             ],
         }
         js = [
-            importmap,
             "django_json_schema_editor/vendor/jsoneditor.js",
             "django_json_schema_editor/django_theme.js",
             "django_json_schema_editor/foreign_key.js",
@@ -175,4 +174,4 @@ class JSONEditorWidget(forms.Textarea):
         language = get_language()
         if language in self.supported_translations:
             js.append(f"django_json_schema_editor/language_{language}.js")
-        return Media(css=css, js=js)
+        return Media(importmap=importmap, css=css, js=js)

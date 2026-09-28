@@ -30,7 +30,7 @@ dynamic = [
   "version",
 ]
 dependencies = [
-  "django-js-asset>=4",
+  "django-js-asset>=5.0a1",
   "fastjsonschema>=2.19",
   "jmespath",
 ]
