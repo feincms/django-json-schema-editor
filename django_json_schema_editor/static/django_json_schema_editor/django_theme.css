@@ -148,6 +148,15 @@
   margin-top: 2px;
 }
 
+/* json-editor hardcodes a white background and black borders for modals */
+.django_json_schema_editor .je-modal {
+  background-color: var(--body-bg);
+  color: var(--body-fg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  padding: 4px;
+}
+
 .django_json_schema_editor .je-modal textarea {
   min-width: min(70vw, 300px);
   min-height: 150px;
