@@ -4,6 +4,9 @@ Change log
 Next version
 ------------
 
+0.15a1 (2026-09-28)
+-------------------
+
 - Fixed the broken presentation of the JSON and properties buttons in Django
   6.1.
 
