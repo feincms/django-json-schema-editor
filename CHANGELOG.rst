@@ -4,6 +4,14 @@ Change log
 Next version
 ------------
 
+0.15a2 (2026-09-30)
+-------------------
+
+- Updated the code to use the new import map implementaton of django-js-asset
+  5.0a1.
+- Fix the flaky integration tests (hopefully).
+- Use a nicer layout for the JSON editor buttons.
+
 0.15a1 (2026-09-28)
 -------------------
 
