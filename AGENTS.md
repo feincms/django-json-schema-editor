@@ -168,3 +168,11 @@ Or with pre-commit (if installed):
 ```bash
 pre-commit run --all-files
 ```
+
+## Commits
+
+- Do not add attribution lines (no `Co-Authored-By` or similar) to commit
+  messages.
+- Commit feature by feature.
+- Keep commit messages short. Don't repeat what is evident from the diff; only
+  explain the why if it isn't obvious.
