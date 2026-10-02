@@ -1,4 +1,3 @@
-import sys
 from functools import partial
 
 import jmespath
@@ -10,7 +9,11 @@ from django.db.models.query import ModelIterable
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
-from django_json_schema_editor.fields import JSONField, paths_to_pks
+from django_json_schema_editor.fields import (
+    JSONField,
+    _inject_into_module,
+    paths_to_pks,
+)
 from django_json_schema_editor.forms import JSONEditorField
 
 
@@ -110,10 +113,7 @@ class JSONPluginBase(models.Model):
         )
         cls._proxy_types_map[type_name] = new_type
         cls._proxy_types_foreign_key_paths[type_name] = foreign_key_paths or {}
-        if (module := sys.modules.get(cls.__module__)) and not hasattr(
-            module, new_type_name
-        ):
-            setattr(module, new_type_name, new_type)
+        _inject_into_module(new_type)
         return new_type
 
     @classmethod

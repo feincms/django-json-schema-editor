@@ -7,7 +7,10 @@ Next version
 - Changed ``JSONPluginBase.proxy`` and the JSON field's model reference
   functionality to automatically inject the created models into the module
   containing the models or fields so that ``manage.py shell`` can automatically
-  import them. The model names should hopefully be unique enough.
+  import them (as ``<PluginClass>_<type_name>`` and
+  ``<model_name>_<app_label>_<to_model_name>_ref``) and stops complaining about
+  import errors. Existing module attributes with the same name are left
+  untouched.
 
 0.15a2 (2026-09-30)
 -------------------

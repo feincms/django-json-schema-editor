@@ -10,6 +10,73 @@ from django.utils.translation import gettext as _
 from django_json_schema_editor.forms import JSONEditorField
 
 
+def _inject_into_module(model):
+    """
+    Make dynamically created models importable from their module (e.g. for the
+    auto-imports of ``manage.py shell``) without overwriting existing attributes
+    """
+    if (module := sys.modules.get(model.__module__)) and not hasattr(
+        module, model.__name__
+    ):
+        setattr(module, model.__name__, model)
+
+
+def _reference_listener(sender, instance, *, jsonmodel, reference, getter, **kwargs):
+    if not isinstance(instance, jsonmodel):
+        return
+
+    if (data := getter(instance)) is None or not isinstance(data, list):
+        return
+
+    pks = [pk for pk in data if pk]
+    valid_pks = []
+    for pk in pks:
+        try:
+            reference.objects.update_or_create(parent=instance, object_id=pk)
+            valid_pks.append(pk)
+        except (ValueError, TypeError, IntegrityError):
+            # Skip primary keys that can't be processed by the database
+            pass
+
+    # Only try to delete references for valid PKs to avoid database errors
+    q = Q(parent=instance)
+    if valid_pks:
+        q &= ~Q(object_id__in=valid_pks)
+    reference.objects.filter(q).delete()
+
+
+def _validate_references(instance, *, to, getter):
+    if (data := getter(instance)) is None or not isinstance(data, list):
+        return
+
+    pks = []
+    invalid = []
+
+    for pk in data:
+        # Primary key is unset (falsy), this is fine
+        if not pk:
+            continue
+
+        # Primary key is not convertible to its Python equivalent
+        try:
+            pks.append(to._meta.pk.to_python(pk))
+        except Exception:
+            invalid.append(pk)
+
+    if not invalid and pks:
+        objects = to._base_manager.filter(pk__in=pks)
+        if len(objects) != len(pks):
+            found = {obj.pk for obj in objects}
+            invalid = [pk for pk in pks if pk not in found]
+
+    if invalid:
+        raise ValidationError(
+            _("Some of the references are invalid: {}").format(
+                ", ".join(map(str, invalid))
+            )
+        )
+
+
 def _register_reference(jsonmodel, to, *, name, getter, field=None):
     class Meta:
         verbose_name = f"{jsonmodel.__name__} ⇒ {to.__name__} reference"
@@ -28,74 +95,27 @@ def _register_reference(jsonmodel, to, *, name, getter, field=None):
         f"{jsonmodel._meta.model_name}_{to._meta.label_lower.replace('.', '_')}_ref"
     )
     reference = type(reference_name, (models.Model,), ns)
-    if (module := sys.modules.get(jsonmodel.__module__)) and not hasattr(
-        module, reference_name
-    ):
-        setattr(module, reference_name, reference)
-
-    def listener(sender, instance, **kwargs):
-        if not isinstance(instance, jsonmodel):
-            return
-
-        if (data := getter(instance)) is None or not isinstance(data, list):
-            return
-
-        pks = [pk for pk in data if pk]
-        valid_pks = []
-        for pk in pks:
-            try:
-                reference.objects.update_or_create(parent=instance, object_id=pk)
-                valid_pks.append(pk)
-            except (ValueError, TypeError, IntegrityError):
-                # Skip primary keys that can't be processed by the database
-                pass
-
-        # Only try to delete references for valid PKs to avoid database errors
-        q = Q(parent=instance)
-        if valid_pks:
-            q &= ~Q(object_id__in=valid_pks)
-        reference.objects.filter(q).delete()
+    _inject_into_module(reference)
 
     # This doesn't work because we're using proxy models:
-    # signals.post_save.connect(listener, sender=jsonmodel, weak=False)
-    signals.post_save.connect(listener, weak=False)
+    # signals.post_save.connect(_reference_listener, sender=jsonmodel, weak=False)
+    signals.post_save.connect(
+        partial(
+            _reference_listener,
+            jsonmodel=jsonmodel,
+            reference=reference,
+            getter=getter,
+        ),
+        weak=False,
+    )
 
     models.ManyToManyField(to, editable=False, through=reference).contribute_to_class(
         jsonmodel, name
     )
 
-    def validate(instance):
-        if (data := getter(instance)) is None or not isinstance(data, list):
-            return
-
-        pks = []
-        invalid = []
-
-        for pk in data:
-            # Primary key is unset (falsy), this is fine
-            if not pk:
-                continue
-
-            # Primary key is not convertible to its Python equivalent
-            try:
-                pks.append(to._meta.pk.to_python(pk))
-            except Exception:
-                invalid.append(pk)
-
-        if not invalid and pks:
-            objects = to._base_manager.filter(pk__in=pks)
-            if len(objects) != len(pks):
-                found = {obj.pk for obj in objects}
-                invalid = [pk for pk in pks if pk not in found]
-
-        if invalid:
-            raise ValidationError(
-                _("Some of the references are invalid: {}").format(
-                    ", ".join(map(str, invalid))
-                )
-            )
-
-    field._reference_validators.append(validate)
+    field._reference_validators.append(
+        partial(_validate_references, to=to, getter=getter)
+    )
 
 
 class JSONField(models.JSONField):
