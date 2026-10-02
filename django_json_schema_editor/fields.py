@@ -1,3 +1,4 @@
+import sys
 from functools import partial
 
 import jmespath
@@ -23,11 +24,14 @@ def _register_reference(jsonmodel, to, *, name, getter, field=None):
         "__str__": lambda obj: str(obj.parent),
     }
 
-    reference = type(
-        f"{jsonmodel._meta.model_name}_{to._meta.label_lower.replace('.', '_')}_ref",
-        (models.Model,),
-        ns,
+    reference_name = (
+        f"{jsonmodel._meta.model_name}_{to._meta.label_lower.replace('.', '_')}_ref"
     )
+    reference = type(reference_name, (models.Model,), ns)
+    if (module := sys.modules.get(jsonmodel.__module__)) and not hasattr(
+        module, reference_name
+    ):
+        setattr(module, reference_name, reference)
 
     def listener(sender, instance, **kwargs):
         if not isinstance(instance, jsonmodel):

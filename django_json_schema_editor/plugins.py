@@ -1,3 +1,4 @@
+import sys
 from functools import partial
 
 import jmespath
@@ -96,8 +97,9 @@ class JSONPluginBase(models.Model):
         # Convert mixins to tuple if provided as list
         mixins_tuple = tuple(mixins) if mixins else ()
 
+        new_type_name = f"{cls.__qualname__}_{type_name}"
         new_type = type(
-            f"{cls.__qualname__}_{type_name}",
+            new_type_name,
             (*mixins_tuple, cls),
             {
                 "__module__": cls.__module__,
@@ -108,6 +110,10 @@ class JSONPluginBase(models.Model):
         )
         cls._proxy_types_map[type_name] = new_type
         cls._proxy_types_foreign_key_paths[type_name] = foreign_key_paths or {}
+        if (module := sys.modules.get(cls.__module__)) and not hasattr(
+            module, new_type_name
+        ):
+            setattr(module, new_type_name, new_type)
         return new_type
 
     @classmethod

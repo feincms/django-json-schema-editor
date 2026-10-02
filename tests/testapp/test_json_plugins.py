@@ -487,3 +487,23 @@ def test_fieldless_plugin_saves_without_help_from_the_editor(rf, admin_user):
     marker = form.save()
     assert marker.data == {}
     assert marker.type == "marker"
+
+
+def test_proxy_is_injected_into_the_module():
+    """Proxies are added to the plugin's module so ``manage.py shell`` finds them."""
+    assert models.JSONPlugin_text is models.Text
+    assert models.JSONPlugin_file is models.Download
+
+    ProxyPlugin = models.JSONPlugin.proxy("test_injection", schema={"type": "object"})
+    assert models.JSONPlugin_test_injection is ProxyPlugin
+
+
+def test_proxy_does_not_overwrite_existing_module_attributes(monkeypatch):
+    sentinel = object()
+    monkeypatch.setattr(models, "JSONPlugin_test_no_overwrite", sentinel, raising=False)
+
+    ProxyPlugin = models.JSONPlugin.proxy(
+        "test_no_overwrite", schema={"type": "object"}
+    )
+    assert models.JSONPlugin_test_no_overwrite is sentinel
+    assert ProxyPlugin is not sentinel

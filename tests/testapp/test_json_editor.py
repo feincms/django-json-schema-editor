@@ -13,6 +13,7 @@ from django_json_schema_editor.forms import (
     empty_value_for_schema,
     resolve_foreign_key_descriptions,
 )
+from testapp import models
 from testapp.models import Article, Download, File, Thing
 
 
@@ -647,3 +648,9 @@ def test_required_field_still_requires_a_value():
     form = Form({"data": ""})
     assert not form.is_valid()
     assert form.errors == {"data": ["This field is required."]}
+
+
+def test_data_reference_models_are_injected_into_the_module():
+    """Reference models are added to the JSON model's module for ``manage.py shell``."""
+    assert models.thing_testapp_file_ref is Thing.files.through
+    assert models.jsonplugin_testapp_file_ref is models.JSONPlugin.files.through

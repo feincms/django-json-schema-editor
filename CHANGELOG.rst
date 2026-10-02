@@ -4,6 +4,11 @@ Change log
 Next version
 ------------
 
+- Changed ``JSONPluginBase.proxy`` and the JSON field's model reference
+  functionality to automatically inject the created models into the module
+  containing the models or fields so that ``manage.py shell`` can automatically
+  import them. The model names should hopefully be unique enough.
+
 0.15a2 (2026-09-30)
 -------------------
 
