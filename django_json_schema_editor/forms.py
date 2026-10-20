@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.text import Truncator
 from django.utils.translation import get_language
-from js_asset import JS, ImportMap, Media
+from js_asset import ImportMap, Media, Script
 
 
 # Our prose editor plugin (``prose_editor.js``) imports
@@ -169,7 +169,7 @@ class JSONEditorWidget(forms.Textarea):
             "django_json_schema_editor/django_theme.js",
             "django_json_schema_editor/foreign_key.js",
             "django_json_schema_editor/widget.js",
-            JS("django_json_schema_editor/prose_editor.js", {"type": "module"}),
+            Script("django_json_schema_editor/prose_editor.js", type="module"),
         ]
         language = get_language()
         if language in self.supported_translations:
