@@ -4,6 +4,9 @@ Change log
 Next version
 ------------
 
+- Added ``downcast(strict=False)`` to skip JSON plugins with unknown proxy
+  types and log an error instead of crashing.
+
 0.15a4 (2026-10-20)
 -------------------
 

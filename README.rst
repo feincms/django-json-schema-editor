@@ -442,6 +442,25 @@ The ``mixins`` parameter accepts a list or tuple of mixin classes that will be a
 - Override base class behavior
 - Share functionality across multiple plugin types
 
+Unknown Proxy Types
+~~~~~~~~~~~~~~~~~~~
+
+When the database contains plugins whose type hasn't been registered using
+``.proxy()`` (for example because a plugin type has been removed from the
+code), ``.downcast()`` raises a ``KeyError``. Use ``.downcast(strict=False)``
+to skip those plugins and log an error instead so that the rest of the content
+can still be rendered, e.g. in production. Override ``get_queryset()`` (which
+is used by django-content-editor and feincms3 when loading plugins) to change
+the behavior for a plugin class. How environments are detected is up to you,
+for example:
+
+.. code-block:: python
+
+   class JSONPlugin(JSONPluginBase, ArticlePlugin):
+       @classmethod
+       def get_queryset(cls):
+           return cls.objects.downcast(strict=env("ENVIRONMENT") != "production")
+
 Development
 -----------
 

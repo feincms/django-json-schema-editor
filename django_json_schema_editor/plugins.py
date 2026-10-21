@@ -1,3 +1,4 @@
+import logging
 from functools import partial
 
 import jmespath
@@ -17,7 +18,26 @@ from django_json_schema_editor.fields import (
 from django_json_schema_editor.forms import JSONEditorField
 
 
-class _JSONPluginModelIterable(ModelIterable):
+logger = logging.getLogger(__name__)
+
+
+class _LenientJSONPluginModelIterable(ModelIterable):
+    def __iter__(self):
+        mapping = self.queryset.model._proxy_types_map
+        for obj in super().__iter__():
+            if cls := mapping.get(obj.type):
+                obj.__class__ = cls
+                yield obj
+            else:
+                logger.error(
+                    "Skipping %r with unknown proxy type %r (pk=%s)",
+                    obj.__class__,
+                    obj.type,
+                    obj.pk,
+                )
+
+
+class _StrictJSONPluginModelIterable(ModelIterable):
     def __iter__(self):
         mapping = self.queryset.model._proxy_types_map
         for obj in super().__iter__():
@@ -26,9 +46,13 @@ class _JSONPluginModelIterable(ModelIterable):
 
 
 class _JSONPluginQuerySet(models.QuerySet):
-    def downcast(self):
+    def downcast(self, *, strict=True):
         obj = self._chain()
-        obj._iterable_class = _JSONPluginModelIterable
+        obj._iterable_class = (
+            _StrictJSONPluginModelIterable
+            if strict
+            else _LenientJSONPluginModelIterable
+        )
         return obj
 
 

@@ -507,3 +507,22 @@ def test_proxy_does_not_overwrite_existing_module_attributes(monkeypatch):
     )
     assert models.JSONPlugin_test_no_overwrite is sentinel
     assert ProxyPlugin is not sentinel
+
+
+@pytest.mark.django_db
+def test_downcast_unknown_type(caplog):
+    article = models.Article.objects.create()
+    text = models.Text.objects.create(
+        parent=article, region="main", ordering=10, data={"text": "Hello"}
+    )
+    unknown = models.Text.objects.create(
+        parent=article, region="main", ordering=20, data={}
+    )
+    models.JSONPlugin.objects.filter(pk=unknown.pk).update(type="removed")
+
+    with pytest.raises(KeyError, match="'removed'"):
+        list(models.JSONPlugin.get_queryset())
+
+    queryset = models.JSONPlugin.objects.downcast(strict=False).order_by("pk")
+    assert list(queryset) == [text]
+    assert "unknown proxy type 'removed'" in caplog.text
