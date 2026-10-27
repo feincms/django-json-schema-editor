@@ -4,6 +4,9 @@ Change log
 Next version
 ------------
 
+0.15.1 (2026-10-27)
+-------------------
+
 - Stopped loading the prose editor plugin when django-prose-editor isn't
   installed; its imports couldn't be resolved and produced a JavaScript error.
 
