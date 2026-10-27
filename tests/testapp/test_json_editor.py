@@ -8,8 +8,10 @@ from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
 from playwright.sync_api import expect
 
+from django_json_schema_editor import forms as editor_forms
 from django_json_schema_editor.forms import (
     JSONEditorField,
+    JSONEditorWidget,
     empty_value_for_schema,
     resolve_foreign_key_descriptions,
 )
@@ -654,3 +656,14 @@ def test_data_reference_models_are_injected_into_the_module():
     """Reference models are added to the JSON model's module for ``manage.py shell``."""
     assert models.thing_testapp_file_ref is Thing.files.through
     assert models.jsonplugin_testapp_file_ref is models.JSONPlugin.files.through
+
+
+@pytest.mark.parametrize("prose_editor", [True, False])
+def test_widget_media_prose_editor(monkeypatch, prose_editor):
+    """The prose editor plugin is only loaded when django-prose-editor is
+    available, since its imports couldn't be resolved otherwise."""
+    if not prose_editor:
+        monkeypatch.setattr(editor_forms, "importmap", None)
+    media = str(JSONEditorWidget().media)
+    assert ("prose_editor.js" in media) is prose_editor
+    assert ("django-prose-editor/configurable" in media) is prose_editor

@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.text import Truncator
 from django.utils.translation import get_language
-from js_asset import ImportMap, Media, Script
+from js_asset import Media, Script
 
 
 # Our prose editor plugin (``prose_editor.js``) imports
@@ -19,12 +19,12 @@ from js_asset import ImportMap, Media, Script
 # maps both) so we never duplicate or drift from its static paths.
 # ``js_asset.Media`` merges it with any other import maps on the page into a
 # single ``<script type="importmap">``. When django-prose-editor is not
-# installed the map stays empty and renders nothing, so the integration is
-# gracefully disabled.
+# installed the integration is disabled: the plugin isn't loaded at all, since
+# its imports couldn't be resolved.
 try:
     from django_prose_editor.widgets import importmap
 except ImportError:
-    importmap = ImportMap({})
+    importmap = None
 
 
 DEFAULT_CONFIG = getattr(
@@ -169,9 +169,11 @@ class JSONEditorWidget(forms.Textarea):
             "django_json_schema_editor/django_theme.js",
             "django_json_schema_editor/foreign_key.js",
             "django_json_schema_editor/widget.js",
-            Script("django_json_schema_editor/prose_editor.js", type="module"),
         ]
         language = get_language()
         if language in self.supported_translations:
             js.append(f"django_json_schema_editor/language_{language}.js")
+        if importmap is None:
+            return Media(css=css, js=js)
+        js.append(Script("django_json_schema_editor/prose_editor.js", type="module"))
         return Media(importmap=importmap, css=css, js=js)
