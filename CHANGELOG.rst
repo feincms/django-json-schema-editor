@@ -4,6 +4,8 @@ Change log
 Next version
 ------------
 
+- Dropped Python 3.9; django-js-asset 5 requires Python 3.10 anyway.
+
 0.15.1 (2026-10-27)
 -------------------
 
