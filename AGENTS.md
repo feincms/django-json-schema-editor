@@ -40,6 +40,7 @@ This project provides a Django widget that integrates `@json-editor/json-editor`
 ### JSONField (django_json_schema_editor/fields.py)
 
 The main field class that extends Django's JSONField with:
+
 - Schema validation support
 - Foreign key description resolution
 - Data reference tracking for referential integrity
@@ -48,6 +49,7 @@ The main field class that extends Django's JSONField with:
 ### JSONPluginBase (django_json_schema_editor/plugins.py)
 
 Base class for feincms3 JSON plugins with features like:
+
 - Self-describing plugins using JMESPath for `__str__` values
 - Foreign key path specifications for nested data
 - Proxy plugin creation with `JSONPluginBase.proxy()`
@@ -55,6 +57,7 @@ Base class for feincms3 JSON plugins with features like:
 ### JSONEditorField (django_json_schema_editor/forms.py)
 
 Form field that provides:
+
 - JSON Schema editor widget in Django admin
 - Foreign key lookup integration
 - Rich text (prose) editor support
@@ -160,11 +163,13 @@ Core extensions (Document, Paragraph, HardBreak, Text, Menu) are always included
 - **biome**: JavaScript and CSS linting and formatting (if JS files present)
 
 To run linting/formatting:
+
 ```bash
 prek run --all-files
 ```
 
 Or with pre-commit (if installed):
+
 ```bash
 pre-commit run --all-files
 ```
